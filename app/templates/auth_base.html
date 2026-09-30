@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="light"/>
+  <title>{% block title %}Condominios SaaS{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0f1a'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ef4d23'/%3E%3C/svg%3E"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body class="auth-wrap">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-brand-badge">
+          <svg viewBox="0 0 32 32" class="auth-logo-svg" aria-hidden="true">
+            <circle cx="26" cy="16" r="3.5" fill="#ef4d23"/>
+            <circle cx="23.07" cy="23.07" r="3.5" fill="#ef4d23"/>
+            <circle cx="16" cy="26" r="3.5" fill="#ef4d23"/>
+            <circle cx="8.93" cy="23.07" r="3.5" fill="#ef4d23"/>
+            <circle cx="6" cy="16" r="3.5" fill="#ef4d23"/>
+            <circle cx="8.93" cy="8.93" r="3.5" fill="#ef4d23"/>
+            <circle cx="16" cy="6" r="3.5" fill="#ef4d23"/>
+            <circle cx="23.07" cy="8.93" r="3.5" fill="#ef4d23"/>
+            <circle cx="16" cy="16" r="3.5" fill="#ef4d23"/>
+          </svg>
+          <span class="auth-brand-name">Condominios SaaS</span>
+        </div>
+      </div>
+
+      {% block content %}{% endblock %}
+    </div>
+
+    <footer class="auth-footer">
+      <span>&copy; Condominios SaaS &bull; Plataforma de Gestión Residencial</span>
+    </footer>
+  </div>
+</body>
+</html>

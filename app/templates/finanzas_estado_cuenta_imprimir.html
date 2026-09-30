@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Estado de cuenta — {{ unidad.identificador }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2430; padding: 40px; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .sub { color: #6b7280; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e3e5e8; font-size: 0.9rem; }
+    th { background: #f4f5f7; }
+    .right { text-align: right; }
+    .totales td:first-child { color: #6b7280; }
+    .totales tr:last-child td { font-weight: 700; border-top: 2px solid #1f2430; }
+    @media print {
+      .no-print { display: none; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <button class="no-print" onclick="window.print()" style="float:right; padding:8px 16px;">Imprimir / Guardar como PDF</button>
+  <h1>Estado de cuenta — {{ unidad.identificador }}</h1>
+  <p class="sub">
+    {{ propietario.full_name if propietario else 'Sin propietario asignado' }}
+    {% if propietario and propietario.email %} · {{ propietario.email }}{% endif %}
+    <br>Generado el {{ hoy }}
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Fecha</th><th>Folio</th><th>Concepto</th><th class="right">Cargo</th><th class="right">Abono</th><th>Estatus</th></tr></thead>
+      <tbody>
+        {% for m in movimientos %}
+        <tr>
+          <td>{{ m.fecha }}</td>
+          <td>{{ m.folio }}</td>
+          <td>{{ m.concepto }}</td>
+          <td class="right">{{ '$%.2f'|format(m.debe) if m.debe > 0 else '' }}</td>
+          <td class="right">{{ '$%.2f'|format(m.haber) if m.haber > 0 else '' }}</td>
+          <td>{{ m.estatus }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table class="totales">
+      <tr><td>Total cuotas emitidas</td><td class="right">${{ '%.2f'|format(totales.total_cuotas) }}</td></tr>
+      <tr><td>Total penalidades / intereses</td><td class="right">${{ '%.2f'|format(totales.total_penalidades) }}</td></tr>
+      <tr><td>Total pagos recibidos</td><td class="right">${{ '%.2f'|format(totales.total_pagos) }}</td></tr>
+      <tr><td>Total descuentos por pronto pago</td><td class="right">${{ '%.2f'|format(totales.total_descuentos) }}</td></tr>
+      <tr><td>Balance total</td><td class="right">${{ '%.2f'|format(totales.balance_total) }}</td></tr>
+      <tr><td>Saldo a favor remanente</td><td class="right">${{ '%.2f'|format(totales.saldo_favor_remanente) }}</td></tr>
+    </table>
+  </div>
+</body>
+</html>

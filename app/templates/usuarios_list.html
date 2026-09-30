@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Usuarios y roles</h1><p>Asigna el rol correcto a cada cuenta: administrador, guardia, propietario, residente o inquilino.</p></div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Activo</th><th></th></tr></thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td>{{ u.full_name }}{% if u.id == user.id %} <span class="badge">Tú</span>{% endif %}</td>
+            <td style="color:var(--text-dim);">{{ u.email }}</td>
+            <td>
+              <form method="post" action="/usuarios/{{ u.id }}/rol" class="btn-row">
+                <select name="rol">
+                  {% for value, label in roles %}
+                    <option value="{{ value }}" {{ 'selected' if u.role and u.role.name == value else '' }}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn secondary">Guardar</button>
+              </form>
+            </td>
+            <td>{% if u.is_active %}<span class="badge">Sí</span>{% else %}<span style="color:var(--text-dim);">No</span>{% endif %}</td>
+            <td>
+              {% if u.id != user.id %}
+              <form method="post" action="/usuarios/{{ u.id }}/estado">
+                <button type="submit" class="btn secondary">{{ 'Desactivar' if u.is_active else 'Activar' }}</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

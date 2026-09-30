@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Nueva emisión — Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Nueva emisión de cargos</h1><p><a href="/finanzas/emisiones?condominio_id={{ condominio_id }}">&larr; Emisiones</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  {% if errors %}
+    <div class="alert error">
+      {% for e in errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" action="/finanzas/emisiones/nueva" id="emision-form">
+    <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+
+    <div class="card">
+      <h2>1. Unidades destino</h2>
+      <div class="btn-row" style="margin-bottom:14px;">
+        <label><input type="radio" name="tipo_seleccion" value="TODAS" checked onchange="onSeleccionChange()"> Todas las viviendas</label>
+        <label><input type="radio" name="tipo_seleccion" value="MANUAL" onchange="onSeleccionChange()"> Selección manual</label>
+        <label><input type="radio" name="tipo_seleccion" value="GRUPO" onchange="onSeleccionChange()"> Por grupo (torre / clúster)</label>
+      </div>
+
+      <div id="panel-manual" style="display:none; max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); padding:10px;">
+        {% for u in unidades %}
+          <label style="display:block; padding:4px 0;"><input type="checkbox" name="unidad_ids" value="{{ u.id }}" style="width:auto; margin-right:8px;">{{ u.identificador }}{% if u.grupo %} <span style="color:var(--text-dim);">({{ u.grupo }})</span>{% endif %}</label>
+        {% endfor %}
+      </div>
+
+      <div id="panel-grupo" style="display:none;">
+        <div class="field">
+          <label>Grupo</label>
+          <select name="grupo">
+            <option value="">Selecciona un grupo…</option>
+            {% for g in grupos %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+          </select>
+        </div>
+        {% if not grupos %}<p style="color:var(--text-dim); font-size:0.85rem;">Ninguna unidad tiene grupo/torre asignado todavía (se define en Condominios).</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Detalle del cargo</h2>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Tipo de cargo</label>
+          <select name="tipo_cargo">
+            <option value="EXTRAORDINARIA">Cuota extraordinaria</option>
+            <option value="CUOTA">Cuota ordinaria</option>
+            <option value="MULTA">Multa</option>
+            <option value="AMENIDAD">Uso de amenidad</option>
+            <option value="TAG_VEHICULAR">Tag vehicular</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Concepto</label>
+          <input type="text" name="concepto" placeholder="Cuota extraordinaria — reparación de elevador" required>
+        </div>
+      </div>
+      <div class="field"><label>Descripción (opcional)</label><textarea name="descripcion" rows="2"></textarea></div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Monto (MXN)</label>
+          <input type="text" name="monto" id="monto-input" placeholder="1500.00" required oninput="previewMonto()">
+          <div id="monto-preview" style="color:var(--text-dim); font-size:0.82rem; margin-top:4px;"></div>
+        </div>
+        <div class="field">
+          <label>Clasificación presupuestal (partida de ingreso)</label>
+          <select name="partida_id">
+            <option value="">Sin asignar</option>
+            {% for p in partidas %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Fecha de adeudo / emisión</label>
+          <input type="date" name="fecha_emision" required>
+        </div>
+        <div class="field">
+          <label>Fecha de vencimiento</label>
+          <input type="date" name="fecha_vencimiento" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>Destino del fondo</label>
+        <select name="fondo_id">
+          <option value="">Sin asignar</option>
+          {% for f in fondos %}<option value="{{ f.id }}">{{ f.nombre }} ({{ f.tipo_fondo.value }})</option>{% endfor %}
+        </select>
+        {% if not fondos %}<p style="color:var(--text-dim); font-size:0.85rem; margin-top:4px;">Crea fondos en <a href="/onboarding/bancos?condominio_id={{ condominio_id }}">Onboarding → Bancos</a>.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Recurrencia</h2>
+      <div class="field">
+        <label>¿Con qué frecuencia se repite este cargo?</label>
+        <select name="recurrencia" id="recurrencia-select" onchange="onRecurrenciaChange()">
+          <option value="NINGUNA">Sin recurrencia (cargo único)</option>
+          <option value="MENSUAL">Mensual</option>
+          <option value="BIMESTRAL">Bimestral</option>
+          <option value="ANUAL">Anual</option>
+        </select>
+      </div>
+      <div id="panel-recurrencia" style="display:none;">
+        <div class="field">
+          <label>Día del mes para generar el siguiente cargo automáticamente (1–28)</label>
+          <input type="text" name="dia_generacion" placeholder="1">
+        </div>
+        <p style="color:var(--text-dim); font-size:0.85rem;">Un proceso en segundo plano revisa esto todos los días y genera el siguiente periodo solo. También puedes forzarlo manualmente desde la lista de emisiones.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. Descuento por pago anticipado</h2>
+      <label><input type="checkbox" name="descuento_activo" value="true" id="descuento-check" style="width:auto; margin-right:8px;" onchange="onDescuentoChange()">Activar descuento por pronto pago</label>
+      <div id="panel-descuento" style="display:none; margin-top:14px;">
+        <div class="grid cols-3">
+          <div class="field">
+            <label>Días antes del vencimiento</label>
+            <input type="text" name="descuento_dias_antes" placeholder="5">
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select name="descuento_tipo">
+              <option value="PORCENTAJE">Porcentaje (%)</option>
+              <option value="FIJO">Monto fijo ($)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Valor</label>
+            <input type="text" name="descuento_valor" placeholder="5">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <button type="submit" class="btn">Emitir cargos</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <script>
+    function onSeleccionChange() {
+      const value = document.querySelector('input[name="tipo_seleccion"]:checked').value;
+      document.getElementById('panel-manual').style.display = value === 'MANUAL' ? 'block' : 'none';
+      document.getElementById('panel-grupo').style.display = value === 'GRUPO' ? 'block' : 'none';
+    }
+    function onRecurrenciaChange() {
+      const value = document.getElementById('recurrencia-select').value;
+      document.getElementById('panel-recurrencia').style.display = value === 'NINGUNA' ? 'none' : 'block';
+    }
+    function onDescuentoChange() {
+      document.getElementById('panel-descuento').style.display = document.getElementById('descuento-check').checked ? 'block' : 'none';
+    }
+    function previewMonto() {
+      const raw = parseFloat(document.getElementById('monto-input').value);
+      const preview = document.getElementById('monto-preview');
+      if (!isNaN(raw)) {
+        preview.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(raw);
+      } else {
+        preview.textContent = '';
+      }
+    }
+    // fecha de emisión por defecto: hoy
+    document.querySelector('input[name="fecha_emision"]').valueAsDate = new Date();
+  </script>
+{% endblock %}

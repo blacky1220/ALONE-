@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Comunicación{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Comunicación y Comunidad</h1><p>Muro de avisos y tickets de incidencias/quejas.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Publicar aviso</h2>
+      <form method="post" action="/comunicacion/avisos">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Título</label><input type="text" name="titulo" required></div>
+        <div class="field"><label>Contenido</label><textarea name="contenido" rows="4" required></textarea></div>
+        <button type="submit" class="btn">Publicar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Nuevo ticket</h2>
+      <form method="post" action="/comunicacion/tickets">
+        <div class="field">
+          <label>Unidad (opcional)</label>
+          <select name="unidad_id"><option value="">—</option>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Título</label><input type="text" name="titulo" required></div>
+        <div class="field"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
+        <div class="field">
+          <label>Prioridad</label>
+          <select name="prioridad"><option value="BAJA">Baja</option><option value="MEDIA" selected>Media</option><option value="ALTA">Alta</option></select>
+        </div>
+        <button type="submit" class="btn">Crear ticket</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Muro de avisos</h2>
+    {% if avisos %}
+      {% for a in avisos %}
+        <div style="padding:14px 0; border-bottom:1px solid var(--border);">
+          <strong>{{ a.titulo }}</strong>
+          <p style="color:var(--text-dim); margin:6px 0 0;">{{ a.contenido }}</p>
+          <p style="color:var(--text-dim); font-size:0.78rem; margin:6px 0 0;">{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+      {% endfor %}
+    {% else %}<div class="empty-state">Sin avisos publicados.</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Tickets</h2>
+    {% if tickets %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Título</th><th>Unidad</th><th>Prioridad</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for t in tickets %}
+            <tr>
+              <td>{{ t.titulo }}</td>
+              <td style="color:var(--text-dim);">{{ unidades_by_id.get(t.unidad_id, '—') }}</td>
+              <td>{{ t.prioridad.value }}</td>
+              <td><span class="badge">{{ t.estado.value }}</span></td>
+              <td>
+                {% if t.estado.value != 'CERRADO' %}
+                <form method="post" action="/comunicacion/tickets/{{ t.id }}" class="btn-row">
+                  <select name="estado">
+                    <option value="ABIERTO" {{ 'selected' if t.estado.value == 'ABIERTO' else '' }}>Abierto</option>
+                    <option value="EN_PROCESO" {{ 'selected' if t.estado.value == 'EN_PROCESO' else '' }}>En proceso</option>
+                    <option value="CERRADO">Cerrado</option>
+                  </select>
+                  <button type="submit" class="btn secondary">Actualizar</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin tickets registrados.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

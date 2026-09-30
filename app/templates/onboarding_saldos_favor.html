@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Saldos a favor — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>4. Captura los saldos a favor</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Registro manual</h2>
+      <p style="color:var(--text-dim); font-size:0.9rem;">El monto se suma a la billetera virtual de la unidad y se aplica automáticamente al primer recibo pendiente y a los que se generen después.</p>
+      <form method="post" action="/onboarding/saldos-favor">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Monto a favor</label><input type="text" name="monto" required></div>
+        <div class="field"><label>Motivo</label><input type="text" name="motivo" placeholder="Pago anticipado antes de la migración"></div>
+        <button type="submit" class="btn">Registrar saldo a favor</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Carga masiva (CSV / Excel)</h2>
+      <p style="color:var(--text-dim); font-size:0.9rem;">Columnas: <code>identificador, monto, motivo</code>.</p>
+      <form method="post" action="/onboarding/saldos-favor/importar" enctype="multipart/form-data">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Archivo (.csv o .xlsx)</label><input type="file" name="archivo" accept=".csv,.xlsx" required></div>
+        <button type="submit" class="btn secondary">Importar saldos</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Pagos anticipados registrados</h2>
+    {% if movimientos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Monto</th><th>Referencia</th><th>Estatus</th><th>Fecha</th><th></th></tr></thead>
+          <tbody>
+            {% for m in movimientos %}
+            <tr>
+              <td>{{ unidades_by_id.get(m.unidad_id, '—') }}</td>
+              <td>${{ '%.2f'|format(m.monto) }}</td>
+              <td style="color:var(--text-dim);">{{ m.referencia or '—' }}</td>
+              <td><span class="badge">{{ m.estado.value }}</span></td>
+              <td>{{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td><a href="/finanzas/pagos/{{ m.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin saldos a favor capturados. Si nadie tenía pagos anticipados, puedes omitir este paso.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

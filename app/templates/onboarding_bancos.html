@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Cuentas bancarias — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>2. Configura cuentas de banco</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Nueva cuenta / caja chica</h2>
+      <form method="post" action="/onboarding/bancos">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Banco</label><input type="text" name="banco" required></div>
+        <div class="field"><label>CLABE</label><input type="text" name="clabe" maxlength="18"></div>
+        <div class="field"><label>Número de cuenta</label><input type="text" name="numero_cuenta"></div>
+        <div class="field"><label>Titular</label><input type="text" name="titular"></div>
+        <div class="field">
+          <label>Tipo de fondo</label>
+          <select name="tipo_fondo">
+            <option value="OPERATIVO">Operativo</option>
+            <option value="RESERVA">Fondo de reserva</option>
+            <option value="MANTENIMIENTO_MAYOR">Mantenimiento mayor</option>
+            <option value="CAJA_CHICA">Caja chica</option>
+          </select>
+        </div>
+        <div class="field"><label>Saldo inicial</label><input type="text" name="saldo_inicial" value="0"></div>
+        <button type="submit" class="btn">Agregar cuenta</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Importar extracto bancario</h2>
+      <p style="color:var(--text-dim); font-size:0.9rem;">Archivo CSV o Excel con columnas <code>fecha, descripcion, monto, tipo</code> (tipo = ABONO o CARGO).</p>
+      <form method="post" action="/onboarding/bancos/importar-movimientos" enctype="multipart/form-data">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field">
+          <label>Cuenta bancaria</label>
+          <select name="cuenta_bancaria_id">
+            <option value="">Sin asignar</option>
+            {% for c in cuentas %}<option value="{{ c.id }}">{{ c.banco }} — {{ c.numero_cuenta or c.clabe or '' }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Archivo (.csv o .xlsx)</label><input type="file" name="archivo" accept=".csv,.xlsx" required></div>
+        <button type="submit" class="btn secondary">Importar movimientos</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fondos contables</h2>
+    <p style="color:var(--text-dim); font-size:0.9rem;">Bolsa contable a la que se destina el dinero recaudado (independiente de en qué cuenta bancaria físicamente se deposite). Se usa al emitir cargos.</p>
+    <form method="post" action="/onboarding/fondos" class="grid cols-3" style="align-items:flex-end;">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;"><label>Nombre del fondo</label><input type="text" name="nombre" placeholder="Fondo operativo 2026" required></div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Tipo</label>
+        <select name="tipo_fondo">
+          <option value="OPERATIVO">Operativo</option>
+          <option value="RESERVA">Fondo de reserva</option>
+          <option value="MANTENIMIENTO_MAYOR">Mantenimiento mayor</option>
+          <option value="CAJA_CHICA">Caja chica</option>
+        </select>
+      </div>
+      <button type="submit" class="btn secondary">Agregar fondo</button>
+    </form>
+    {% if fondos %}
+      <div class="table-wrap">
+        <table style="margin-top:14px;">
+          <thead><tr><th>Nombre</th><th>Tipo</th></tr></thead>
+          <tbody>
+            {% for f in fondos %}<tr><td>{{ f.nombre }}</td><td><span class="badge">{{ f.tipo_fondo.value }}</span></td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Cuentas registradas</h2>
+    {% if cuentas %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Banco</th><th>Cuenta / CLABE</th><th>Titular</th><th>Fondo</th><th>Saldo inicial</th></tr></thead>
+          <tbody>
+            {% for c in cuentas %}
+            <tr>
+              <td>{{ c.banco }}</td>
+              <td style="color:var(--text-dim);">{{ c.numero_cuenta or c.clabe or '—' }}</td>
+              <td style="color:var(--text-dim);">{{ c.titular or '—' }}</td>
+              <td><span class="badge">{{ c.tipo_fondo.value }}</span></td>
+              <td>${{ '%.2f'|format(c.saldo_inicial) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no hay cuentas registradas.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Movimientos recientes</h2>
+    {% if movimientos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Monto</th><th>Conciliado</th></tr></thead>
+          <tbody>
+            {% for m in movimientos %}
+            <tr>
+              <td>{{ m.fecha }}</td>
+              <td style="color:var(--text-dim);">{{ m.descripcion or '—' }}</td>
+              <td>{{ m.tipo.value }}</td>
+              <td>${{ '%.2f'|format(m.monto) }}</td>
+              <td>{% if m.conciliado %}<span class="badge">Sí</span>{% else %}No{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:10px;"><a href="/finanzas/conciliacion?condominio_id={{ condominio_id }}">Ir a conciliación completa →</a></p>
+    {% else %}
+      <div class="empty-state">Sin movimientos importados todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

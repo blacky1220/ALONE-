@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Emisión de cargos — Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Emisión y generación de cobros</h1><p><a href="/finanzas?condominio_id={{ condominio_id }}">&larr; Finanzas</a></p></div>
+    <div class="btn-row">
+      <form method="post" action="/finanzas/emisiones/procesar-recurrentes">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <button type="submit" class="btn secondary" title="Fuerza hoy la generación de las emisiones recurrentes que ya toquen (el worker automático corre solo, todos los días a la 1am)">Procesar recurrentes ahora</button>
+      </form>
+      <a href="/finanzas/emisiones/nueva?condominio_id={{ condominio_id }}" class="btn">Nueva emisión</a>
+    </div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Historial de emisiones</h2>
+    {% if lotes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concepto</th><th>Selección</th><th>Monto</th><th>Unidades</th><th>Total facturado</th><th>Recurrencia</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for l in lotes %}
+            <tr>
+              <td>{{ l.concepto }}</td>
+              <td style="color:var(--text-dim);">
+                {% if l.tipo_seleccion.value == 'TODAS' %}Todas las unidades
+                {% elif l.tipo_seleccion.value == 'GRUPO' %}Grupo: {{ l.grupo }}
+                {% else %}Selección manual{% endif %}
+              </td>
+              <td>${{ '%.2f'|format(l.monto) }} {{ l.moneda }}</td>
+              <td>{{ l.total_unidades }}</td>
+              <td>${{ '%.2f'|format(l.total_facturado) }}</td>
+              <td>
+                {% if l.recurrencia.value == 'NINGUNA' %}Única vez
+                {% else %}<span class="badge">{{ l.recurrencia.value }}</span> día {{ l.dia_generacion }}{% endif %}
+              </td>
+              <td>{% if l.recurrencia.value != 'NINGUNA' %}{% if l.activo %}<span class="badge">Activa</span>{% else %}<span style="color:var(--text-dim);">Pausada</span>{% endif %}{% endif %}</td>
+              <td><a href="/finanzas/emisiones/{{ l.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no has emitido ningún cargo desde este módulo.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

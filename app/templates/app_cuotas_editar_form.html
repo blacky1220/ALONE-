@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Editar {{ cargo.concepto }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Editar adeudo — {{ unidad.identificador }}</h1><p><a href="/app/cuotas/editar?condominio_id={{ unidad.condominio_id }}">&larr; Editar Adeudos</a></p></div>
+  </div>
+
+  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <form method="post" action="/app/cuotas/editar/{{ cargo.id }}">
+      <div class="field"><label>Concepto</label><input type="text" name="concepto" value="{{ cargo.concepto }}" required></div>
+      <div class="grid cols-2">
+        <div class="field"><label>Monto</label><input type="text" name="monto_base" value="{{ cargo.monto_base }}" required></div>
+        <div class="field"><label>Fecha de vencimiento</label><input type="date" name="fecha_vencimiento" value="{{ cargo.fecha_vencimiento }}" required></div>
+      </div>
+      <button type="submit" class="btn">Guardar cambios</button>
+    </form>
+  </div>
+{% endblock %}

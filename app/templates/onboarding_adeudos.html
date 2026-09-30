@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Adeudos iniciales — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>3. Captura los adeudos iniciales</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Registro manual</h2>
+      <form method="post" action="/onboarding/adeudos-iniciales">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Monto adeudado</label><input type="text" name="monto" required></div>
+        <div class="field"><label>Descripción</label><input type="text" name="descripcion" placeholder="Cartera vencida previa a migración"></div>
+        <button type="submit" class="btn">Registrar adeudo</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Carga masiva (CSV / Excel)</h2>
+      <p style="color:var(--text-dim); font-size:0.9rem;">Columnas: <code>identificador, monto, descripcion</code>. El identificador debe coincidir con el de la unidad.</p>
+      <form method="post" action="/onboarding/adeudos-iniciales/importar" enctype="multipart/form-data">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Archivo (.csv o .xlsx)</label><input type="file" name="archivo" accept=".csv,.xlsx" required></div>
+        <button type="submit" class="btn secondary">Importar adeudos</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Saldos iniciales deudores registrados</h2>
+    {% if adeudos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Concepto</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for a in adeudos %}
+            <tr>
+              <td>{{ unidades_by_id.get(a.unidad_id, '—') }}</td>
+              <td style="color:var(--text-dim);">{{ a.concepto }}</td>
+              <td>${{ '%.2f'|format(a.monto_base) }}</td>
+              <td><span class="badge">{{ a.estado.value }}</span></td>
+              <td><a href="/finanzas/cargos/{{ a.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin adeudos iniciales capturados. Si ninguna unidad debía nada al migrar, puedes omitir este paso.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

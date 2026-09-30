@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Editar Adeudos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Editar Adeudos</h1><p>Modifica concepto, monto o fecha de vencimiento antes de que se liquiden (solo cargos PENDIENTES).</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    {% if cargos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Concepto</th><th>Periodo</th><th>Monto</th><th>Vencimiento</th><th></th></tr></thead>
+          <tbody>
+            {% for c in cargos %}
+            <tr>
+              <td>{{ unidades_by_id.get(c.unidad_id, '—') }}</td>
+              <td>{{ c.concepto }}</td>
+              <td>{{ c.periodo }}</td>
+              <td>${{ '%.2f'|format(c.monto_base) }}</td>
+              <td>{{ c.fecha_vencimiento }}</td>
+              <td><a href="/app/cuotas/editar/{{ c.id }}" class="btn secondary">Editar</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">No hay cargos pendientes editables (los que ya recibieron algún pago no se pueden editar aquí).</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

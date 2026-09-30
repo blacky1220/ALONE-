@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Egresos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Reporte Detallado de Egresos</h1><p>Desglose por partida presupuestal — {{ anio }}.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <form method="get" class="btn-row">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;"><label>Año</label><input type="text" name="anio" value="{{ anio }}" style="width:100px;"></div>
+      <button type="submit" class="btn secondary">Ver</button>
+    </form>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card stat"><p class="stat-label">Total egresado</p><p class="stat-value">${{ '%.2f'|format(total) }}</p></div>
+    <div class="card stat"><p class="stat-label">Número de egresos</p><p class="stat-value">{{ num_egresos }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Por partida presupuestal</h2>
+    {% if por_partida %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Partida</th><th>Total</th></tr></thead>
+          <tbody>{% for nombre, monto in por_partida %}<tr><td>{{ nombre }}</td><td>${{ '%.2f'|format(monto) }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin egresos registrados en {{ anio }}.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

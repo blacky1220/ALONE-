@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Mantenimiento{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Mantenimiento y Activos</h1><p>Órdenes de trabajo, proveedores y bitácora de mantenimiento.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Nuevo proveedor</h2>
+      <form method="post" action="/mantenimiento/proveedores">
+        <div class="field"><label>Nombre</label><input type="text" name="nombre" required></div>
+        <div class="field"><label>Servicio</label><input type="text" name="servicio" placeholder="Plomería, jardinería..."></div>
+        <div class="field"><label>Teléfono</label><input type="text" name="telefono"></div>
+        <div class="field"><label>Correo</label><input type="email" name="email"></div>
+        <button type="submit" class="btn">Agregar proveedor</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Nueva orden de trabajo</h2>
+      <form method="post" action="/mantenimiento/ordenes">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Título</label><input type="text" name="titulo" required></div>
+        <div class="field"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
+        <div class="field">
+          <label>Proveedor (opcional)</label>
+          <select name="proveedor_id"><option value="">—</option>{% for p in proveedores %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select>
+        </div>
+        <div class="field">
+          <label>Prioridad</label>
+          <select name="prioridad"><option value="BAJA">Baja</option><option value="MEDIA" selected>Media</option><option value="ALTA">Alta</option></select>
+        </div>
+        <button type="submit" class="btn">Crear orden</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Órdenes de trabajo</h2>
+    {% if ordenes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Título</th><th>Proveedor</th><th>Prioridad</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for o in ordenes %}
+            <tr>
+              <td>{{ o.titulo }}</td>
+              <td style="color:var(--text-dim);">{{ proveedores_by_id.get(o.proveedor_id, '—') }}</td>
+              <td>{{ o.prioridad.value }}</td>
+              <td><span class="badge">{{ o.estado.value }}</span></td>
+              <td>
+                {% if o.estado.value != 'RESUELTA' %}
+                <form method="post" action="/mantenimiento/ordenes/{{ o.id }}" class="btn-row">
+                  <select name="estado">
+                    <option value="ABIERTA" {{ 'selected' if o.estado.value == 'ABIERTA' else '' }}>Abierta</option>
+                    <option value="EN_PROCESO" {{ 'selected' if o.estado.value == 'EN_PROCESO' else '' }}>En proceso</option>
+                    <option value="RESUELTA">Resuelta</option>
+                  </select>
+                  <button type="submit" class="btn secondary">Actualizar</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin órdenes de trabajo registradas.</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Proveedores</h2>
+    {% if proveedores %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Servicio</th><th>Teléfono</th><th>Correo</th></tr></thead>
+          <tbody>
+            {% for p in proveedores %}
+            <tr><td>{{ p.nombre }}</td><td style="color:var(--text-dim);">{{ p.servicio or '—' }}</td><td>{{ p.telefono or '—' }}</td><td>{{ p.email or '—' }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin proveedores registrados.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

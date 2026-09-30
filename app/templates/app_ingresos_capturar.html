@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Capturar Pagos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Capturar Pagos</h1><p>Formulario rápido para asentar un ingreso entrante.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <form method="post" action="/app/ingresos/capturar">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Monto</label><input type="text" name="monto" placeholder="1500.00" required></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Forma de pago</label>
+          <select name="metodo">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="SPEI">SPEI</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="field"><label>Fecha</label><input type="date" name="fecha_pago" required></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field"><label>Referencia</label><input type="text" name="referencia"></div>
+        <div class="field">
+          <label>Cuenta destino</label>
+          <select name="cuenta_bancaria_id"><option value="">Sin asignar</option>{% for c in cuentas %}<option value="{{ c.id }}">{{ c.banco }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fondo asignado</label>
+        <select name="fondo_id"><option value="">Sin asignar</option>{% for f in fondos %}<option value="{{ f.id }}">{{ f.nombre }}</option>{% endfor %}</select>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" name="auto_aplicar" value="true" checked style="width:auto; margin-right:8px;">Aplicar automáticamente a los adeudos más antiguos (FIFO)</label>
+      </div>
+      <button type="submit" class="btn">Registrar pago</button>
+    </form>
+  </div>
+  {% endif %}
+  <script>document.querySelector('input[name="fecha_pago"]').valueAsDate = new Date();</script>
+{% endblock %}

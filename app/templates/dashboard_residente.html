@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Panel — Condominios SaaS{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>Hola, {{ user.full_name }}</h1>
+      <p>{{ 'Propietario' if es_propietario else 'Residente' }} · {{ mi_rol }}</p>
+    </div>
+  </div>
+
+  {% if unidades %}
+  <div class="card">
+    <h2>Mis unidades</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Unidad</th><th>Condominio</th><th></th></tr></thead>
+        <tbody>
+          {% for u in unidades %}
+          <tr>
+            <td>{{ u.identificador }}</td>
+            <td style="color:var(--text-dim);">{{ u.condominio.nombre }}</td>
+            <td>
+              {% if puede_ver_finanzas %}<a href="/finanzas/unidades/{{ u.id }}" class="btn secondary">Estado de cuenta</a>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    Todavía no tienes ninguna unidad vinculada a tu cuenta. Pide a la administración que te asocie desde <em>Condominios</em>.
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Accesos rápidos</h2>
+    <div class="btn-row">
+      <a href="/reservaciones" class="btn">Reservar amenidad</a>
+      <a href="/comunicacion" class="btn secondary">Avisos y tickets</a>
+    </div>
+  </div>
+{% endblock %}

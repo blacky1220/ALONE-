@@ -1,0 +1,49 @@
+{% extends "auth_base.html" %}
+{% block title %}Crear cuenta — Condominios SaaS{% endblock %}
+{% block content %}
+  <h1 class="auth-title">Crea tu <span class="serif-italic">cuenta</span></h1>
+  <p class="sub">Regístrate para administrar tu condominio y residentes</p>
+
+  {% if error %}
+    <div class="alert error">
+      <span class="alert-icon">&times;</span>
+      <span>{{ error }}</span>
+    </div>
+  {% endif %}
+
+  <form method="post" action="/register" class="auth-form">
+    <div class="field">
+      <label for="full_name">Nombre completo</label>
+      <div class="input-wrap">
+        <input type="text" id="full_name" name="full_name" required autofocus
+               autocomplete="name" placeholder="Ej. Ana Morales" value="{{ full_name or '' }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="email">Correo electrónico</label>
+      <div class="input-wrap">
+        <input type="email" id="email" name="email" required
+               autocomplete="username" placeholder="ana@condominio.com" value="{{ email or '' }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="phone">Teléfono <span style="font-weight:400; color:var(--text-faint);">(opcional)</span></label>
+      <div class="input-wrap">
+        <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+52 55 1234 5678" value="{{ phone or '' }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <div class="input-wrap">
+        <input type="password" id="password" name="password" required
+               autocomplete="new-password" placeholder="Mínimo 6 caracteres">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary auth-submit">
+      <span>Registrar condominio</span>
+      <span class="btn-circle-arrow">&rarr;</span>
+    </button>
+  </form>
+
+  <p class="switch">¿Ya tienes una cuenta? <a href="/login">Inicia sesión</a></p>
+{% endblock %}

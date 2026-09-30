@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Ingresos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Reporte Detallado de Ingresos</h1><p>Desglose analítico de cobros — {{ anio }}.</p></div>
+    {% if condominio_id %}<a href="/app/ingresos/reporte/excel?condominio_id={{ condominio_id }}&anio={{ anio }}" class="btn secondary">Exportar a Excel</a>{% endif %}
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <form method="get" class="btn-row">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;"><label>Año</label><input type="text" name="anio" value="{{ anio }}" style="width:100px;"></div>
+      <button type="submit" class="btn secondary">Ver</button>
+    </form>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card stat"><p class="stat-label">Total cobrado</p><p class="stat-value">${{ '%.2f'|format(total) }}</p></div>
+    <div class="card stat"><p class="stat-label">Número de pagos</p><p class="stat-value">{{ num_pagos }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Por forma de pago</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Método</th><th>Total</th></tr></thead>
+        <tbody>{% for metodo, monto in por_metodo.items() %}<tr><td>{{ metodo }}</td><td>${{ '%.2f'|format(monto) }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Por mes</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>{% for m in range(1,13) %}<th>{{ m }}</th>{% endfor %}</tr></thead>
+        <tbody><tr>{% for m in range(1,13) %}<td>${{ '%.0f'|format(por_mes[m]) }}</td>{% endfor %}</tr></tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Panel — Condominios SaaS{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>Hola, {{ user.full_name }} <span class="serif-italic" style="color:var(--text-dim); font-size:1.6rem;">&mdash; Vista general</span></h1>
+      <p>Bienvenido al panel central de administración de condominios.</p>
+    </div>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge badge-success">&#x25CF; Activo</span>
+      </div>
+      <h3>Autenticación y RBAC</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Registro, login y control de accesos basado en roles sobre PostgreSQL.</p>
+      <a href="/usuarios" class="btn secondary" style="font-size:12px; padding:6px 14px;">Administrar usuarios &rarr;</a>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge">&#x25CF; Principal</span>
+      </div>
+      <h3>Finanzas y Cobranza</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Recibos de mantenimiento, moras automáticas, pagos y conciliación bancaria.</p>
+      <a href="/finanzas" class="btn secondary" style="font-size:12px; padding:6px 14px;">Ir a finanzas &rarr;</a>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge badge-neutral">&#x25CF; Configurado</span>
+      </div>
+      <h3>Condominios y Unidades</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Directorio de edificios, departamentos, casas y asignación de propietarios.</p>
+      <a href="/condominios" class="btn secondary" style="font-size:12px; padding:6px 14px;">Ver condominios &rarr;</a>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge badge-neutral">&#x25CF; Módulo</span>
+      </div>
+      <h3>Reportes y Documentos</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Plantillas HTML/CSS para generar avisos, recibos y estados de cuenta.</p>
+      <a href="/reportes" class="btn secondary" style="font-size:12px; padding:6px 14px;">Editor de reportes &rarr;</a>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge badge-neutral">&#x25CF; Operativo</span>
+      </div>
+      <h3>Seguridad y Accesos</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Control de accesos vehiculares y peatonales, bitácora de guardias y QR.</p>
+      <a href="/seguridad" class="btn secondary" style="font-size:12px; padding:6px 14px;">Ver accesos &rarr;</a>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span class="badge badge-neutral">&#x25CF; Operativo</span>
+      </div>
+      <h3>Reservaciones de Amenidades</h3>
+      <p style="color:var(--text-dim); font-size:0.88rem; margin:0 0 16px;">Gestión de áreas comunes, albercas, canchas y salones para residentes.</p>
+      <a href="/reservaciones" class="btn secondary" style="font-size:12px; padding:6px 14px;">Ver reservas &rarr;</a>
+    </div>
+  </div>
+
+  <div class="card" style="background:#fafafa; border:1px solid var(--border);">
+    <h2 style="margin-bottom:8px;">Accesos directos</h2>
+    <p style="color:var(--text-dim); font-size:0.88rem; margin-bottom:16px;">Atajos frecuentes para la administración cotidiana del condominio.</p>
+    <div class="btn-row">
+      <a href="/condominios" class="btn btn-primary">Condominios</a>
+      <a href="/finanzas" class="btn secondary">Finanzas y Pagos</a>
+      <a href="/propietarios" class="btn secondary">Propietarios</a>
+      <a href="/reportes" class="btn secondary">Reportes</a>
+      <a href="/docs" class="btn secondary" target="_blank" style="margin-left:auto;">API Docs (/docs) &nearr;</a>
+    </div>
+  </div>
+{% endblock %}

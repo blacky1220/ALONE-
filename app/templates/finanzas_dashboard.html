@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Finanzas y Cobranza</h1><p>Recibos, moras, pagos y conciliación bancaria.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio %}
+  <div class="grid cols-3">
+    <div class="card stat"><p class="stat-label">Pendiente</p><p class="stat-value">${{ '%.2f'|format(resumen.pendiente) }}</p></div>
+    <div class="card stat"><p class="stat-label">Vencido</p><p class="stat-value is-danger">${{ '%.2f'|format(resumen.vencido) }}</p></div>
+    <div class="card stat"><p class="stat-label">Cobrado este mes</p><p class="stat-value is-primary">${{ '%.2f'|format(resumen.cobrado_mes) }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Accesos rápidos</h2>
+    <div class="btn-row" style="flex-wrap:wrap; gap:10px;">
+      <a href="/app/estados-cuenta?condominio_id={{ condominio.id }}" class="btn" style="background:var(--brand-orange, #ef4d23); border-color:var(--brand-orange, #ef4d23); font-weight:600;">
+        Escanear Estado de Cuenta
+      </a>
+      <a href="/finanzas/emisiones/nueva?condominio_id={{ condominio.id }}" class="btn secondary">Emitir cargos</a>
+      <a href="/finanzas/emisiones?condominio_id={{ condominio.id }}" class="btn secondary">Historial de emisiones</a>
+      <a href="/finanzas/cargos?condominio_id={{ condominio.id }}" class="btn secondary">Recibos y cobranza</a>
+      <a href="/finanzas/cuotas?condominio_id={{ condominio.id }}" class="btn secondary">Configurar cuota y mora</a>
+      <a href="/finanzas/conciliacion?condominio_id={{ condominio.id }}" class="btn secondary">Conciliación bancaria</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Saldo por unidad</h2>
+    {% if unidades %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Propietario</th><th>Saldo</th><th></th></tr></thead>
+          <tbody>
+            {% for u in unidades %}
+            <tr>
+              <td>{{ u.identificador }}</td>
+              <td style="color:var(--text-dim);">{{ propietarios_by_id.get(u.propietario_id, '—') }}</td>
+              <td style="{{ 'color:var(--danger); font-weight:600;' if saldos.get(u.id, 0) > 0 else '' }}">${{ '%.2f'|format(saldos.get(u.id, 0)) }}</td>
+              <td><a href="/finanzas/unidades/{{ u.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Este condominio no tiene unidades todavía. <a href="/condominios/{{ condominio.id }}">Agrégalas aquí</a>.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

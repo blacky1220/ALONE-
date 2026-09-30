@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Control de Ingresos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Control de Ingresos</h1><p>Bitácora histórica de pagos con filtros.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <form method="get" class="grid cols-3">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field"><label>Desde</label><input type="date" name="desde" value="{{ filtros.desde }}"></div>
+      <div class="field"><label>Hasta</label><input type="date" name="hasta" value="{{ filtros.hasta }}"></div>
+      <div class="field">
+        <label>Unidad</label>
+        <select name="unidad_id"><option value="">Todas</option>{% for u in unidades %}<option value="{{ u.id }}" {{ 'selected' if filtros.unidad_id == u.id|string else '' }}>{{ u.identificador }}</option>{% endfor %}</select>
+      </div>
+      <div class="field">
+        <label>Cuenta bancaria</label>
+        <select name="cuenta_bancaria_id"><option value="">Todas</option>{% for c in cuentas %}<option value="{{ c.id }}" {{ 'selected' if filtros.cuenta_bancaria_id == c.id|string else '' }}>{{ c.banco }}</option>{% endfor %}</select>
+      </div>
+      <div class="field">
+        <label>Fondo</label>
+        <select name="fondo_id"><option value="">Todos</option>{% for f in fondos %}<option value="{{ f.id }}" {{ 'selected' if filtros.fondo_id == f.id|string else '' }}>{{ f.nombre }}</option>{% endfor %}</select>
+      </div>
+      <button type="submit" class="btn secondary">Filtrar</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Resultados ({{ pagos | length }}) — Total: ${{ '%.2f'|format(total) }}</h2>
+    {% if pagos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Unidad</th><th>Monto</th><th>Método</th><th>Referencia</th><th>Estatus</th><th></th></tr></thead>
+          <tbody>
+            {% for p in pagos %}
+            <tr>
+              <td>{{ p.fecha_pago }}</td>
+              <td>{{ unidades_by_id.get(p.unidad_id, '—') }}</td>
+              <td>${{ '%.2f'|format(p.monto) }}</td>
+              <td>{{ p.metodo.value }}</td>
+              <td style="color:var(--text-dim);">{{ p.referencia or '—' }}</td>
+              <td><span class="badge">{{ p.estado.value }}</span></td>
+              <td><a href="/finanzas/pagos/{{ p.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin movimientos con estos filtros.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Cuentas por Pagar{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Reporte Detallado de Cuentas por Pagar</h1><p>Saldo pendiente con proveedores.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card stat"><p class="stat-label">Total pendiente</p><p class="stat-value">${{ '%.2f'|format(pendiente_total) }}</p></div>
+    <div class="card stat"><p class="stat-label">Vence en 30 días</p><p class="stat-value is-danger">${{ '%.2f'|format(proximos_30) }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Por proveedor</h2>
+    {% if por_proveedor %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Proveedor</th><th>Saldo pendiente</th></tr></thead>
+          <tbody>{% for nombre, monto in por_proveedor %}<tr><td>{{ nombre }}</td><td>${{ '%.2f'|format(monto) }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin saldos pendientes con proveedores.</div>{% endif %}
+  </div>
+
+  <p><a href="/app/cuentas-por-pagar/antiguedad?condominio_id={{ condominio_id }}">Ver antigüedad de compras &rarr;</a></p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Registrar pago — {{ unidad.identificador }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Registrar ingreso — {{ unidad.identificador }}</h1><p><a href="/finanzas/unidades/{{ unidad.id }}">&larr; Estado de cuenta</a></p></div>
+  </div>
+
+  <div class="card">
+    <h2>Ficha del ingreso</h2>
+    <form method="post" action="/finanzas/unidades/{{ unidad.id }}/pagos/nuevo" enctype="multipart/form-data">
+      <div class="grid cols-2">
+        <div class="field"><label>Monto total recibido</label><input type="text" name="monto" placeholder="1500.00" required></div>
+        <div class="field">
+          <label>Forma de pago</label>
+          <select name="metodo">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="SPEI">SPEI</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field"><label>Referencia bancaria</label><input type="text" name="referencia" placeholder="Folio / clave de rastreo"></div>
+        <div class="field"><label>Fecha del movimiento</label><input type="date" name="fecha_pago" required></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Cuenta destino</label>
+          <select name="cuenta_bancaria_id">
+            <option value="">Sin asignar</option>
+            {% for c in cuentas %}<option value="{{ c.id }}">{{ c.banco }} — {{ c.tipo_fondo.value }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Fondo asignado</label>
+          <select name="fondo_id">
+            <option value="">Sin asignar</option>
+            {% for f in fondos %}<option value="{{ f.id }}">{{ f.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Comprobante (opcional)</label><input type="file" name="comprobante"></div>
+      <div class="field">
+        <label><input type="checkbox" name="auto_aplicar" value="true" checked style="width:auto; margin-right:8px;">Aplicar automáticamente a los adeudos más antiguos (FIFO)</label>
+        <p style="color:var(--text-dim); font-size:0.85rem; margin-top:4px;">Si no hay ningún adeudo pendiente, el pago completo queda como saldo a favor disponible. Desmarca esta opción si prefieres decidir manualmente contra qué cargo se aplica.</p>
+      </div>
+      <button type="submit" class="btn">Registrar ingreso</button>
+    </form>
+  </div>
+{% endblock %}

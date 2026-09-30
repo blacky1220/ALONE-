@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Antigüedad de Compras{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Antigüedad de Compras</h1><p>Saldo pendiente con proveedores agrupado por días de vencimiento.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-5">
+    <div class="card stat"><p class="stat-label">Vigente</p><p class="stat-value">${{ '%.2f'|format(buckets.vigente) }}</p></div>
+    <div class="card stat"><p class="stat-label">0-30 días</p><p class="stat-value">${{ '%.2f'|format(buckets['0_30']) }}</p></div>
+    <div class="card stat"><p class="stat-label">31-60 días</p><p class="stat-value is-warning">${{ '%.2f'|format(buckets['31_60']) }}</p></div>
+    <div class="card stat"><p class="stat-label">61-90 días</p><p class="stat-value is-warning-strong">${{ '%.2f'|format(buckets['61_90']) }}</p></div>
+    <div class="card stat"><p class="stat-label">90+ días</p><p class="stat-value is-danger">${{ '%.2f'|format(buckets['90_mas']) }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Detalle — Total: ${{ '%.2f'|format(total) }}</h2>
+    {% if detalle %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Proveedor</th><th>Folio</th><th>Concepto</th><th>Vencimiento</th><th>Días vencido</th><th>Saldo</th><th>Rango</th></tr></thead>
+          <tbody>
+            {% for d in detalle %}
+            <tr>
+              <td>{{ d.proveedor }}</td>
+              <td>{{ d.folio or '—' }}</td>
+              <td>{{ d.concepto }}</td>
+              <td>{{ d.fecha_vencimiento }}</td>
+              <td>{{ d.dias_vencido }}</td>
+              <td style="font-weight:600;">${{ '%.2f'|format(d.saldo) }}</td>
+              <td><span class="badge {{ 'badge-danger' if d.bucket in ('61_90', '90_mas') else 'badge-neutral' }}">{{ d.bucket.replace('_', '-') }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin cuentas por pagar pendientes.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

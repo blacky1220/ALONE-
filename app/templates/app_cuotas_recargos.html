@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Generar Recargos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Generar Recargos</h1><p>Automatiza los intereses por mora de los cargos vencidos, según la configuración de cuotas.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <p>{{ candidatos | length }} cargo(s) vencido(s) sin recargo aplicado o pendientes de recalcular.</p>
+    <form method="post" action="/app/cuotas/recargos">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <button type="submit" class="btn">Generar recargos ahora</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Cargos candidatos</h2>
+    {% if candidatos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Concepto</th><th>Vencimiento</th><th>Días vencido</th><th>Saldo</th></tr></thead>
+          <tbody>
+            {% for c in candidatos %}
+            <tr>
+              <td>{{ unidades_by_id.get(c.unidad_id, '—') }}</td>
+              <td>{{ c.concepto }}</td>
+              <td>{{ c.fecha_vencimiento }}</td>
+              <td>{{ (now - c.fecha_vencimiento).days if now else '' }}</td>
+              <td>${{ '%.2f'|format(c.saldo) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin cargos vencidos pendientes de recargo.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

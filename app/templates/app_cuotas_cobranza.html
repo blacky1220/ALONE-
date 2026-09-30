@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Control de Cobranza{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Control de Cobranza</h1><p>Matriz de cartera vencida y seguimiento de residentes morosos.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Cartera vencida — Total: <span style="color:var(--danger);">${{ '%.2f'|format(total_vencido) }}</span></h2>
+    {% if matriz %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Propietario</th><th>Cargos vencidos</th><th>Total vencido</th><th>Días máx. vencido</th><th></th></tr></thead>
+          <tbody>
+            {% for r in matriz %}
+            <tr>
+              <td>{{ r.identificador }}</td>
+              <td style="color:var(--text-dim);">{{ r.propietario or '—' }}</td>
+              <td>{{ r.cargos_vencidos }}</td>
+              <td style="color:var(--danger); font-weight:600;">${{ '%.2f'|format(r.total_vencido) }}</td>
+              <td>{{ r.dias_max_vencido }}</td>
+              <td><a href="/finanzas/unidades/{{ r.unidad_id }}" class="btn secondary">Ver estado de cuenta</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">No hay cartera vencida en este condominio.</div>{% endif %}
+  </div>
+{% endif %}
+{% endblock %}

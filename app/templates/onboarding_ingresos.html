@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Ingresos del mes — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>6. Captura tus ingresos al mes</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Registrar ingreso</h2>
+    <p style="color:var(--text-dim); font-size:0.9rem;">Cuotas ordinarias se generan en <a href="/finanzas/cargos?condominio_id={{ condominio_id }}">Recibos y cobranza</a>. Aquí capturas extraordinarias, multas, uso de amenidades y tags vehiculares.</p>
+    <form method="post" action="/onboarding/ingresos" class="grid cols-3" style="align-items:flex-end;">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;">
+        <label>Unidad</label>
+        <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Tipo de ingreso</label>
+        <select name="tipo">
+          <option value="EXTRAORDINARIA">Cuota extraordinaria</option>
+          <option value="MULTA">Multa</option>
+          <option value="AMENIDAD">Uso de amenidad</option>
+          <option value="TAG_VEHICULAR">Tag vehicular</option>
+          <option value="OTRO">Otro</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>Concepto</label><input type="text" name="concepto" placeholder="Multa por ruido" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Monto</label><input type="text" name="monto" required></div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Método si se cobra ahora</label>
+        <select name="metodo_pago">
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="TRANSFERENCIA">Transferencia</option>
+          <option value="TARJETA">Tarjeta</option>
+          <option value="SPEI">SPEI</option>
+          <option value="OTRO">Otro</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label><input type="checkbox" name="cobrar_de_inmediato" value="true" style="width:auto; margin-right:6px;">Cobrar de inmediato</label>
+      </div>
+      <button type="submit" class="btn">Registrar ingreso</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Ingresos extra recientes</h2>
+    {% if recientes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for c in recientes %}
+            <tr>
+              <td>{{ unidades_by_id.get(c.unidad_id, '—') }}</td>
+              <td><span class="badge">{{ c.tipo.value }}</span></td>
+              <td style="color:var(--text-dim);">{{ c.concepto }}</td>
+              <td>${{ '%.2f'|format(c.monto_base) }}</td>
+              <td>{{ c.estado.value }}</td>
+              <td><a href="/finanzas/cargos/{{ c.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin ingresos extraordinarios registrados todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

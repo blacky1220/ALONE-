@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Sin permisos{% endblock %}
+{% block content %}
+  <div class="card empty-state">
+    <p style="font-size:1.05rem; color:var(--text); margin-top:8px;"><strong>No tienes permisos para ver esta sección.</strong></p>
+    <p>Tu rol actual es <strong>{{ mi_rol or 'sin asignar' }}</strong>. Si crees que deberías tener acceso,
+       pide a un administrador que lo ajuste en Usuarios.</p>
+    <a href="/dashboard" class="btn" style="margin-top:14px;">Ir al panel</a>
+  </div>
+{% endblock %}

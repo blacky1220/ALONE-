@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ condominio.nombre }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>{{ condominio.nombre }}</h1><p><a href="/condominios">&larr; Todos los condominios</a></p></div>
+  </div>
+
+  <div class="card">
+    <h2>Nueva unidad</h2>
+    <form method="post" action="/condominios/{{ condominio.id }}/unidades" class="grid cols-3" style="align-items:flex-end;">
+      <div class="field" style="margin-bottom:0;"><label>Identificador</label><input type="text" name="identificador" placeholder="A-101" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Grupo / Torre / Clúster</label><input type="text" name="grupo" placeholder="Torre A"></div>
+      <div class="field" style="margin-bottom:0;"><label>Tipo</label><input type="text" name="tipo" value="departamento"></div>
+      <div class="field" style="margin-bottom:0;"><label>Cuota fija de mantenimiento</label><input type="text" name="cuota_mantenimiento" placeholder="1500.00" required></div>
+      <div class="field" style="margin-bottom:0;"><label>% Indiviso (si cobras por prorrateo)</label><input type="text" name="indiviso_pct" placeholder="ej. 2.5"></div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Propietario (opcional)</label>
+        <select name="propietario_id">
+          <option value="">Sin asignar</option>
+          {% for p in propietarios %}
+            <option value="{{ p.id }}">{{ p.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn">Agregar unidad</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Unidades ({{ unidades | length }})</h2>
+    {% if unidades %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Grupo</th><th>Tipo</th><th>Cuota fija</th><th>Indiviso</th><th>Saldo a favor</th><th>Propietario</th><th></th></tr></thead>
+          <tbody>
+            {% for u in unidades %}
+            <tr>
+              <td>{{ u.identificador }}</td>
+              <td style="color:var(--text-dim);">{{ u.grupo or '—' }}</td>
+              <td style="color:var(--text-dim);">{{ u.tipo }}</td>
+              <td>${{ '%.2f'|format(u.cuota_mantenimiento) }}</td>
+              <td style="color:var(--text-dim);">{{ '%.2f'|format(u.indiviso_pct) + '%' if u.indiviso_pct else '—' }}</td>
+              <td style="{{ 'color:var(--primary-dark); font-weight:600;' if u.saldo_favor > 0 else 'color:var(--text-dim);' }}">${{ '%.2f'|format(u.saldo_favor) }}</td>
+              <td style="color:var(--text-dim);">{{ propietarios_by_id.get(u.propietario_id, '—') }}</td>
+              <td><a href="/finanzas/unidades/{{ u.id }}" class="btn secondary">Estado de cuenta</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no hay unidades en este condominio.</div>
+    {% endif %}
+  </div>
+{% endblock %}

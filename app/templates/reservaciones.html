@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Reservaciones{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Reservas y Amenidades</h1><p>Calendario simple de áreas comunes con control de horarios y depósitos.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Nueva amenidad</h2>
+      <form method="post" action="/reservaciones/amenidades">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field"><label>Nombre</label><input type="text" name="nombre" placeholder="Salón de eventos" required></div>
+        <div class="field"><label>Capacidad</label><input type="text" name="capacidad" placeholder="50"></div>
+        <div class="field">
+          <label><input type="checkbox" name="requiere_deposito" value="true" style="width:auto; margin-right:6px;">Requiere depósito</label>
+        </div>
+        <div class="field"><label>Monto del depósito</label><input type="text" name="monto_deposito" value="0"></div>
+        <button type="submit" class="btn">Crear amenidad</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Nueva reservación</h2>
+      {% if amenidades %}
+      <form method="post" action="/reservaciones">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        <div class="field">
+          <label>Amenidad</label>
+          <select name="amenidad_id" required>
+            {% for a in amenidades %}<option value="{{ a.id }}">{{ a.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>
+            {% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Fecha</label><input type="date" name="fecha" required></div>
+        <div class="grid cols-2">
+          <div class="field"><label>Hora inicio</label><input type="time" name="hora_inicio" required></div>
+          <div class="field"><label>Hora fin</label><input type="time" name="hora_fin" required></div>
+        </div>
+        <button type="submit" class="btn">Reservar</button>
+      </form>
+      {% else %}
+        <div class="empty-state">Crea primero una amenidad.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Amenidades</h2>
+    {% if amenidades %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Capacidad</th><th>Depósito</th></tr></thead>
+          <tbody>
+            {% for a in amenidades %}
+            <tr><td>{{ a.nombre }}</td><td>{{ a.capacidad or '—' }}</td><td>{{ '$%.2f'|format(a.monto_deposito) if a.requiere_deposito else 'No requiere' }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin amenidades registradas.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Próximas reservaciones</h2>
+    {% if reservaciones %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Amenidad</th><th>Unidad</th><th>Fecha</th><th>Horario</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for r in reservaciones %}
+            <tr>
+              <td>{{ amenidades_by_id.get(r.amenidad_id, '—') }}</td>
+              <td>{{ unidades_by_id.get(r.unidad_id, '—') }}</td>
+              <td>{{ r.fecha }}</td>
+              <td>{{ r.hora_inicio }} – {{ r.hora_fin }}</td>
+              <td><span class="badge">{{ r.estado.value }}</span></td>
+              <td>
+                {% if r.estado.value == 'CONFIRMADA' %}
+                <form method="post" action="/reservaciones/{{ r.id }}/cancelar">
+                  <button type="submit" class="btn danger">Cancelar</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin reservaciones todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

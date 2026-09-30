@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Seguridad{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Control de Accesos y Seguridad</h1><p>Bitácora de visitas, paquetería y códigos QR de acceso para casetas/guardias.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="grid cols-3">
+    <div class="card">
+      <h3>Registrar visita</h3>
+      <form method="post" action="/seguridad/visitas">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Visitante</label><input type="text" name="nombre_visitante" required></div>
+        <div class="field"><label>Motivo</label><input type="text" name="motivo"></div>
+        <button type="submit" class="btn">Registrar entrada</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Registrar paquete</h3>
+      <form method="post" action="/seguridad/paquetes">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Descripción</label><input type="text" name="descripcion" placeholder="Paquete Amazon"></div>
+        <div class="field"><label>Recibido por</label><input type="text" name="recibido_por"></div>
+        <button type="submit" class="btn">Registrar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Generar acceso QR</h3>
+      <form method="post" action="/seguridad/accesos-qr">
+        <div class="field">
+          <label>Unidad</label>
+          <select name="unidad_id" required>{% for u in unidades %}<option value="{{ u.id }}">{{ u.identificador }}</option>{% endfor %}</select>
+        </div>
+        <div class="field"><label>Invitado</label><input type="text" name="invitado"></div>
+        <button type="submit" class="btn">Generar QR</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Visitas recientes</h2>
+    {% if visitas %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Visitante</th><th>Motivo</th><th>Entrada</th><th>Salida</th><th></th></tr></thead>
+          <tbody>
+            {% for v in visitas %}
+            <tr>
+              <td>{{ unidades_by_id.get(v.unidad_id, '—') }}</td>
+              <td>{{ v.nombre_visitante }}</td>
+              <td style="color:var(--text-dim);">{{ v.motivo or '—' }}</td>
+              <td>{{ v.entrada.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ v.salida.strftime('%Y-%m-%d %H:%M') if v.salida else '—' }}</td>
+              <td>
+                {% if not v.salida %}
+                <form method="post" action="/seguridad/visitas/{{ v.id }}/salida"><button type="submit" class="btn secondary">Registrar salida</button></form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin visitas registradas.</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Paquetería</h2>
+    {% if paquetes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Descripción</th><th>Recibido</th><th>Entregado</th><th></th></tr></thead>
+          <tbody>
+            {% for p in paquetes %}
+            <tr>
+              <td>{{ unidades_by_id.get(p.unidad_id, '—') }}</td>
+              <td style="color:var(--text-dim);">{{ p.descripcion or '—' }}</td>
+              <td>{{ p.fecha_recepcion.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{% if p.entregado %}<span class="badge">Sí</span>{% else %}No{% endif %}</td>
+              <td>
+                {% if not p.entregado %}
+                <form method="post" action="/seguridad/paquetes/{{ p.id }}/entregar"><button type="submit" class="btn secondary">Marcar entregado</button></form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin paquetes registrados.</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Accesos QR generados</h2>
+    {% if accesos_qr %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Invitado</th><th>Código</th><th>Usado</th></tr></thead>
+          <tbody>
+            {% for a in accesos_qr %}
+            <tr>
+              <td>{{ unidades_by_id.get(a.unidad_id, '—') }}</td>
+              <td style="color:var(--text-dim);">{{ a.invitado or '—' }}</td>
+              <td><code>{{ a.codigo }}</code></td>
+              <td>{% if a.usado %}<span class="badge">Sí</span>{% else %}No{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-dim); font-size:0.85rem; margin-top:10px;">La imagen del QR se genera bajo demanda en <code>/api/v1/seguridad/accesos-qr/&lt;id&gt;/imagen</code> para integrarla en casetas o apps de guardias.</p>
+    {% else %}<div class="empty-state">Sin códigos QR generados.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

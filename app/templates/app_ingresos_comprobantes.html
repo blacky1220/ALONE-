@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Comprobantes de Pago{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Comprobantes de Pago</h1><p>Repositorio de recibos adjuntos y facturas CFDI.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Comprobantes de ingresos adjuntos</h2>
+    {% if pagos_con_comprobante %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Unidad</th><th>Monto</th><th></th></tr></thead>
+          <tbody>
+            {% for p in pagos_con_comprobante %}
+            <tr>
+              <td>{{ p.fecha_pago }}</td><td>{{ p.unidad.identificador }}</td><td>${{ '%.2f'|format(p.monto) }}</td>
+              <td><a href="/finanzas/pagos/{{ p.id }}/comprobante" class="btn secondary">Ver comprobante</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin comprobantes adjuntos todavía.</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Facturas CFDI</h2>
+    {% if facturas %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cargo</th><th>Estado</th><th>UUID fiscal</th><th>Notas</th></tr></thead>
+          <tbody>
+            {% for f in facturas %}
+            <tr>
+              <td><a href="/finanzas/cargos/{{ f.cargo_id }}">CGO-{{ f.cargo_id }}</a></td>
+              <td><span class="badge">{{ f.estado.value }}</span></td>
+              <td>{{ f.uuid_fiscal or '—' }}</td>
+              <td style="color:var(--text-dim);">{{ f.notas or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin facturas generadas todavía.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

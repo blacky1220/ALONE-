@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Pago PAG-{{ pago.id }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Pago PAG-{{ pago.id }}</h1><p><a href="/finanzas/unidades/{{ unidad.id }}">&larr; Estado de cuenta de {{ unidad.identificador }}</a></p></div>
+    {% if pago.estado.value != 'CANCELADO' %}
+    <form method="post" action="/finanzas/pagos/{{ pago.id }}/revertir" onsubmit="return confirm('¿Revertir este pago? Se deshacen todas sus aplicaciones.');">
+      <button type="submit" class="btn danger">Revertir recibo</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Ficha del ingreso</h2>
+      <div class="table-wrap">
+        <table>
+          <tr><td>Unidad</td><td>{{ unidad.identificador }}</td></tr>
+          <tr><td>Monto total</td><td>${{ '%.2f'|format(pago.monto) }}</td></tr>
+          <tr><td>Forma de pago</td><td>{{ pago.metodo.value }}</td></tr>
+          <tr><td>Referencia</td><td>{{ pago.referencia or '—' }}</td></tr>
+          <tr><td>Fecha</td><td>{{ pago.fecha_pago }}</td></tr>
+          <tr><td>Cuenta destino</td><td>{{ pago.cuenta_bancaria.banco if pago.cuenta_bancaria else '—' }}</td></tr>
+          <tr><td>Fondo asignado</td><td>{{ pago.fondo.nombre if pago.fondo else '—' }}</td></tr>
+          <tr><td>Estatus</td><td><span class="badge">{{ pago.estado.value }}</span></td></tr>
+          <tr><td>Total aplicado</td><td>${{ '%.2f'|format(pago.monto_aplicado) }}</td></tr>
+          <tr><td>Disponible</td><td style="{{ 'color:var(--primary-dark); font-weight:600;' if pago.monto_disponible > 0 else '' }}">${{ '%.2f'|format(pago.monto_disponible) }}</td></tr>
+        </table>
+      </div>
+      {% if pago.comprobante_path %}
+        <a href="/finanzas/pagos/{{ pago.id }}/comprobante" class="btn secondary" style="margin-top:12px;">Ver comprobante</a>
+      {% endif %}
+
+      {% if pago.monto_aplicado == 0 %}
+        <div class="alert" style="margin-top:14px; background:#eef2f7; color:#3b5166; border:1px solid #d7e0ea;">
+          Total aplicado: $0.00 — este ingreso se clasificó automáticamente como <strong>Saldo a Favor</strong> de {{ unidad.identificador }}.
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Aplicar contra un adeudo</h2>
+      {% if pago.monto_disponible > 0 and pendientes %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Concepto</th><th>Vencimiento</th><th>Adeudado</th><th></th></tr></thead>
+            <tbody>
+              {% for c in pendientes %}
+              <tr>
+                <td>{{ c.concepto }} <span style="color:var(--text-dim);">({{ c.periodo }})</span></td>
+                <td>{{ c.fecha_vencimiento }}</td>
+                <td>${{ '%.2f'|format(c.saldo) }}</td>
+                <td>
+                  <form method="post" action="/finanzas/pagos/{{ pago.id }}/aplicar" class="btn-row">
+                    <input type="hidden" name="cargo_id" value="{{ c.id }}">
+                    <input type="text" name="monto" value="{{ [pago.monto_disponible, c.saldo] | min }}" style="width:100px;">
+                    <button type="submit" class="btn secondary">Aplicar</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% elif pago.monto_disponible <= 0 %}
+        <div class="empty-state">Este pago ya está completamente aplicado.</div>
+      {% else %}
+        <div class="empty-state">La unidad no tiene adeudos pendientes contra los cuales aplicar este saldo.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tabla de aplicación (histórico)</h2>
+    {% if pago.aplicaciones %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cargo</th><th>Monto aplicado</th><th>Fecha</th></tr></thead>
+          <tbody>
+            {% for a in pago.aplicaciones %}
+            <tr>
+              <td><a href="/finanzas/cargos/{{ a.cargo_id }}">CGO-{{ a.cargo_id }} — {{ a.cargo.concepto }}</a></td>
+              <td>${{ '%.2f'|format(a.monto_aplicado) }}</td>
+              <td>{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Total aplicado: $0.00 — sin aplicaciones registradas.</div>
+    {% endif %}
+  </div>
+{% endblock %}

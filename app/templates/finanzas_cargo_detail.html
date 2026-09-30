@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Recibo {{ cargo.periodo }} — Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>{{ unidad.identificador }} — {{ cargo.periodo }}</h1><p><a href="/finanzas/cargos?condominio_id={{ unidad.condominio_id }}">&larr; Recibos</a></p></div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Detalle del recibo</h2>
+      <div class="table-wrap">
+        <table>
+          <tr><td>Concepto</td><td>{{ cargo.concepto }}</td></tr>
+          <tr><td>Monto base</td><td>${{ '%.2f'|format(cargo.monto_base) }}</td></tr>
+          <tr><td>Recargo por mora</td><td>${{ '%.2f'|format(cargo.recargo) }}</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>${{ '%.2f'|format(cargo.monto_total) }}</strong></td></tr>
+          <tr><td>Pagado</td><td>${{ '%.2f'|format(cargo.monto_pagado) }}</td></tr>
+          <tr><td>Saldo</td><td style="{{ 'color:var(--danger); font-weight:600;' if cargo.saldo > 0 else '' }}">${{ '%.2f'|format(cargo.saldo) }}</td></tr>
+          <tr><td>Vencimiento</td><td>{{ cargo.fecha_vencimiento }}</td></tr>
+          <tr><td>Estado</td><td><span class="badge">{{ cargo.estado.value }}</span></td></tr>
+        </table>
+      </div>
+
+      {% if not factura %}
+        <form method="post" action="/finanzas/cargos/{{ cargo.id }}/factura" style="margin-top:14px;">
+          <button type="submit" class="btn secondary">Generar factura CFDI</button>
+        </form>
+      {% else %}
+        <div class="alert" style="margin-top:14px; background:#fdf6e3; color:#8a5a1c; border:1px solid #f1dfa6;">
+          Factura {{ factura.estado.value }}. {{ factura.notas or '' }}
+        </div>
+      {% endif %}
+
+      <div class="alert" style="margin-top:10px; background:#eef2f7; color:#3b5166; border:1px solid #d7e0ea;">
+        Pago en línea próximamente — hoy los pagos se registran manualmente abajo.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Registrar pago</h2>
+      {% if cargo.saldo > 0 %}
+      <form method="post" action="/finanzas/cargos/{{ cargo.id }}/pagos">
+        <div class="field"><label>Monto</label><input type="text" name="monto" value="{{ cargo.saldo }}" required></div>
+        <div class="field">
+          <label>Método</label>
+          <select name="metodo">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="SPEI">SPEI</option>
+            <option value="OTRO">Otro</option>
+          </select>
+        </div>
+        <div class="field"><label>Referencia (opcional)</label><input type="text" name="referencia"></div>
+        <button type="submit" class="btn">Registrar pago</button>
+      </form>
+      {% else %}
+        <div class="empty-state">Este recibo ya está saldado.</div>
+      {% endif %}
+
+      <h3 style="margin-top:22px;">Pagos aplicados a este recibo</h3>
+      {% if cargo.aplicaciones %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Monto aplicado</th><th>Método</th><th>Referencia</th><th>Folio</th></tr></thead>
+            <tbody>
+              {% for a in cargo.aplicaciones %}
+              <tr>
+                <td>{{ a.pago.fecha_pago }}</td>
+                <td>${{ '%.2f'|format(a.monto_aplicado) }}</td>
+                <td>{{ a.pago.metodo.value }}</td>
+                <td style="color:var(--text-dim);">{{ a.pago.referencia or '—' }}</td>
+                <td><a href="/finanzas/pagos/{{ a.pago_id }}">PAG-{{ a.pago_id }}</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">Sin pagos aplicados todavía.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

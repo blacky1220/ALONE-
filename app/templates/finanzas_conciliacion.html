@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Conciliación bancaria — Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Conciliación bancaria</h1><p><a href="/finanzas?condominio_id={{ condominio_id }}">&larr; Finanzas</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Registrar movimiento bancario</h2>
+    <p style="color:var(--text-dim); font-size:0.9rem;">Captura manualmente los movimientos de tu estado de cuenta bancario y vincúlalos con un pago registrado en el sistema.</p>
+    <form method="post" action="/finanzas/conciliacion/movimientos" class="grid cols-3" style="align-items:flex-end;">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;"><label>Fecha</label><input type="date" name="fecha" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Descripción</label><input type="text" name="descripcion"></div>
+      <div class="field" style="margin-bottom:0;"><label>Monto</label><input type="text" name="monto" required></div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Tipo</label>
+        <select name="tipo"><option value="ABONO">Abono</option><option value="CARGO">Cargo</option></select>
+      </div>
+      <button type="submit" class="btn">Agregar</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Movimientos</h2>
+    {% if movimientos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Tipo</th><th>Monto</th><th>Conciliado</th><th></th></tr></thead>
+          <tbody>
+            {% for m in movimientos %}
+            <tr>
+              <td>{{ m.fecha }}</td>
+              <td style="color:var(--text-dim);">{{ m.descripcion or '—' }}</td>
+              <td>{{ m.tipo.value }}</td>
+              <td>${{ '%.2f'|format(m.monto) }}</td>
+              <td>{% if m.conciliado %}<span class="badge">Sí</span>{% else %}<span style="color:var(--text-dim);">No</span>{% endif %}</td>
+              <td>
+                {% if not m.conciliado %}
+                <form method="post" action="/finanzas/conciliacion/movimientos/{{ m.id }}/conciliar" class="btn-row">
+                  <select name="pago_id" required>
+                    <option value="">Vincular pago…</option>
+                    {% for p in pagos_recientes %}
+                      <option value="{{ p.id }}">#{{ p.id }} · ${{ '%.2f'|format(p.monto) }} · {{ p.fecha_pago }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn secondary">Conciliar</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin movimientos capturados todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

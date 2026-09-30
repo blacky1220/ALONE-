@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Estado de cuenta {{ unidad.identificador }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>Estado de cuenta — {{ unidad.identificador }}</h1>
+      <p><a href="{{ '/condominios/' ~ unidad.condominio_id if es_admin else '/dashboard' }}">&larr; Volver</a></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <form method="get" class="grid cols-3" style="align-items:flex-end;">
+      <div class="field" style="margin-bottom:0;"><label>Desde</label><input type="date" name="desde" value="{{ desde }}"></div>
+      <div class="field" style="margin-bottom:0;"><label>Hasta</label><input type="date" name="hasta" value="{{ hasta }}"></div>
+      <button type="submit" class="btn secondary">Filtrar periodo</button>
+    </form>
+    <div class="grid cols-2" style="margin-top:18px;">
+      <div class="stat">
+        <p class="stat-label">Contacto principal</p>
+        <p style="font-weight:600; margin:0;">{{ propietario.full_name if propietario else 'Sin propietario asignado' }}</p>
+        <p class="stat-hint">{{ propietario.email if propietario and propietario.email else '' }}</p>
+      </div>
+      <div class="stat" style="text-align:right;">
+        <p class="stat-label">Saldo a favor actual</p>
+        <p class="stat-value {{ 'is-primary' if unidad.saldo_favor > 0 else 'is-muted' }}" style="font-size:1.55rem;">${{ '%.2f'|format(unidad.saldo_favor) }}</p>
+      </div>
+    </div>
+  </div>
+
+  {% if puede_administrar %}
+  <div class="card">
+    <div class="btn-row">
+      <a href="/finanzas/unidades/{{ unidad.id }}/pagos/nuevo" class="btn">Registrar pago</a>
+      <a href="/finanzas/unidades/{{ unidad.id }}/imprimir" class="btn secondary" target="_blank">Generar PDF de estado de cuenta</a>
+      <a href="/finanzas/unidades/{{ unidad.id }}/excel" class="btn secondary">Exportar a Excel</a>
+      <form method="post" action="/finanzas/unidades/{{ unidad.id }}/enviar-aviso">
+        <button type="submit" class="btn secondary">Enviar aviso de cobro</button>
+      </form>
+    </div>
+    {% if request.query_params.get('aviso') == 'preparado' %}
+      <div class="alert info" style="margin-top:12px;">
+        El envío automático de avisos por correo todavía no está conectado a un proveedor (ver app/utils/mailer.py). Por ahora, descarga el PDF y compártelo manualmente.
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Libro mayor de la unidad</h2>
+    {% if movimientos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Concepto / Folio</th><th>Cargo (Debe)</th><th>Abono (Haber)</th><th>Estatus</th><th></th></tr></thead>
+          <tbody>
+            {% for m in movimientos %}
+            <tr>
+              <td>{{ m.fecha }}</td>
+              <td>
+                {{ m.concepto }}<br>
+                {% if m.cargo_id %}<a href="/finanzas/cargos/{{ m.cargo_id }}" style="color:var(--text-dim); font-size:0.8rem;">{{ m.folio }}</a>
+                {% elif m.pago_id %}<a href="/finanzas/pagos/{{ m.pago_id }}" style="color:var(--text-dim); font-size:0.8rem;">{{ m.folio }}</a>{% endif %}
+              </td>
+              <td style="{{ 'color:var(--danger);' if m.debe > 0 else '' }}">{{ '$%.2f'|format(m.debe) if m.debe > 0 else '—' }}</td>
+              <td style="{{ 'color:var(--primary-dark);' if m.haber > 0 else '' }}">{{ '$%.2f'|format(m.haber) if m.haber > 0 else '—' }}</td>
+              <td><span class="badge">{{ m.estatus }}</span></td>
+              <td>
+                {% if m.cargo_id %}<a href="/finanzas/cargos/{{ m.cargo_id }}" class="btn secondary">Ver</a>
+                {% elif m.pago_id %}<a href="/finanzas/pagos/{{ m.pago_id }}" class="btn secondary">Ver</a>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin movimientos en el periodo seleccionado.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Resumen de totales</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><td>Total cuotas emitidas</td><td>${{ '%.2f'|format(totales.total_cuotas) }}</td></tr>
+        <tr><td>Total penalidades / intereses</td><td>${{ '%.2f'|format(totales.total_penalidades) }}</td></tr>
+        <tr><td>Total pagos recibidos</td><td>${{ '%.2f'|format(totales.total_pagos) }}</td></tr>
+        <tr><td>Total descuentos por pronto pago</td><td>${{ '%.2f'|format(totales.total_descuentos) }}</td></tr>
+        <tr><td><strong>Balance total</strong></td><td><strong style="{{ 'color:var(--danger);' if totales.balance_total > 0 else 'color:var(--primary-dark);' }}">${{ '%.2f'|format(totales.balance_total) }}</strong></td></tr>
+        <tr><td><strong>Saldo a favor remanente</strong></td><td><strong style="color:var(--primary-dark);">${{ '%.2f'|format(totales.saldo_favor_remanente) }}</strong></td></tr>
+      </table>
+    </div>
+  </div>
+{% endblock %}

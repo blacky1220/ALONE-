@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Egresos — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>7. Captura los egresos</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Registrar egreso</h2>
+    <form method="post" action="/onboarding/egresos" enctype="multipart/form-data" class="grid cols-3" style="align-items:flex-end;">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0;"><label>Descripción</label><input type="text" name="descripcion" placeholder="Mantenimiento de elevador" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Monto</label><input type="text" name="monto" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Fecha</label><input type="date" name="fecha" required></div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Proveedor</label>
+        <select name="proveedor_id"><option value="">—</option>{% for p in proveedores %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Cuenta bancaria origen</label>
+        <select name="cuenta_bancaria_id"><option value="">—</option>{% for c in cuentas %}<option value="{{ c.id }}">{{ c.banco }} ({{ c.tipo_fondo.value }})</option>{% endfor %}</select>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Partida presupuestal</label>
+        <select name="partida_id"><option value="">—</option>{% for p in partidas %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>Comprobante PDF</label><input type="file" name="comprobante_pdf" accept=".pdf"></div>
+      <div class="field" style="margin-bottom:0;"><label>Comprobante XML (CFDI)</label><input type="file" name="comprobante_xml" accept=".xml"></div>
+      <button type="submit" class="btn">Registrar egreso</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Egresos registrados</h2>
+    {% if egresos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Proveedor</th><th>Cuenta</th><th>Monto</th><th>Comprobantes</th></tr></thead>
+          <tbody>
+            {% for e in egresos %}
+            <tr>
+              <td>{{ e.fecha }}</td>
+              <td style="color:var(--text-dim);">{{ e.descripcion }}</td>
+              <td style="color:var(--text-dim);">{{ proveedores_by_id.get(e.proveedor_id, '—') }}</td>
+              <td style="color:var(--text-dim);">{{ cuentas_by_id.get(e.cuenta_bancaria_id, '—') }}</td>
+              <td>${{ '%.2f'|format(e.monto) }}</td>
+              <td class="btn-row">
+                {% if e.comprobante_pdf_path %}<a href="/onboarding/egresos/{{ e.id }}/comprobante/pdf" class="btn secondary">PDF</a>{% endif %}
+                {% if e.comprobante_xml_path %}<a href="/onboarding/egresos/{{ e.id }}/comprobante/xml" class="btn secondary">XML</a>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin egresos registrados todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

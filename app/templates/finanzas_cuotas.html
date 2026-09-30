@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Cuotas condominales — Finanzas{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Cuotas condominales</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a> · <a href="/finanzas?condominio_id={{ condominio_id }}">Finanzas</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Reglas de cobro — {{ condominio.nombre }}</h2>
+    <form method="post" action="/finanzas/cuotas" class="grid cols-2">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+
+      <div class="field">
+        <label>Tipo de cálculo de la cuota</label>
+        <select name="tipo_calculo" id="tipo_calculo">
+          <option value="FIJA" {{ 'selected' if config and config.tipo_calculo.value == 'FIJA' else '' }}>Fija (monto por unidad, definido en Condominios)</option>
+          <option value="INDIVISO" {{ 'selected' if config and config.tipo_calculo.value == 'INDIVISO' else '' }}>Por indiviso (% de copropiedad de cada unidad)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Monto total mensual a prorratear (solo si es por indiviso)</label>
+        <input type="text" name="monto_total_prorrateo" value="{{ config.monto_total_prorrateo if config and config.monto_total_prorrateo else '' }}" placeholder="ej. 150000.00">
+      </div>
+
+      <div class="field"><label>Día límite de pago (del mes)</label><input type="text" name="dia_limite_pago" value="{{ config.dia_limite_pago if config else 10 }}"></div>
+      <div class="field"><label>Días de gracia después del límite</label><input type="text" name="dias_gracia" value="{{ config.dias_gracia if config else 0 }}"></div>
+
+      <div class="field">
+        <label>Tipo de recargo por mora</label>
+        <select name="recargo_tipo">
+          <option value="PORCENTAJE" {{ 'selected' if config and config.recargo_tipo.value == 'PORCENTAJE' else '' }}>Porcentaje sobre la cuota</option>
+          <option value="FIJO" {{ 'selected' if config and config.recargo_tipo.value == 'FIJO' else '' }}>Monto fijo</option>
+        </select>
+      </div>
+      <div class="field"><label>Valor del recargo</label><input type="text" name="recargo_valor" value="{{ config.recargo_valor if config else 0 }}" placeholder="ej. 5 (%) o 100 (monto fijo)"></div>
+
+      <div class="field"><label>Descuento por pronto pago (%)</label><input type="text" name="descuento_pronto_pago_pct" value="{{ config.descuento_pronto_pago_pct if config else 0 }}"></div>
+      <div class="field"><label>Días desde la emisión para aplicar el descuento</label><input type="text" name="descuento_pronto_pago_dias" value="{{ config.descuento_pronto_pago_dias if config else 0 }}" placeholder="0 = desactivado"></div>
+
+      <button type="submit" class="btn">Guardar configuración</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <p style="color:var(--text-dim); font-size:0.9rem;">
+      El monto fijo y el % de indiviso de cada unidad se editan en
+      <a href="/condominios/{{ condominio_id }}">Condominios → {{ condominio.nombre }}</a>.
+      Cuotas extraordinarias, multas, amenidades y tags vehiculares se capturan en
+      <a href="/onboarding/ingresos?condominio_id={{ condominio_id }}">Ingresos del mes</a>.
+    </p>
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ lote.concepto }} — Emisión{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>{{ lote.concepto }}</h1><p><a href="/finanzas/emisiones?condominio_id={{ lote.condominio_id }}">&larr; Emisiones</a></p></div>
+    {% if lote.recurrencia.value != 'NINGUNA' %}
+    <div class="btn-row">
+      {% if lote.activo %}
+      <form method="post" action="/finanzas/emisiones/{{ lote.id }}/pausar"><button type="submit" class="btn secondary">Pausar recurrencia</button></form>
+      {% else %}
+      <form method="post" action="/finanzas/emisiones/{{ lote.id }}/reanudar"><button type="submit" class="btn">Reanudar recurrencia</button></form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card stat"><p class="stat-label">Unidades afectadas</p><p class="stat-value">{{ lote.total_unidades }}</p></div>
+    <div class="card stat"><p class="stat-label">Total facturado</p><p class="stat-value">${{ '%.2f'|format(lote.total_facturado) }} {{ lote.moneda }}</p></div>
+    <div class="card"><h3 style="margin:0; font-size:0.85rem; color:var(--text-dim); text-transform:uppercase;">Recurrencia</h3><p style="font-size:1.3rem; font-weight:700; margin:6px 0 0;">{{ 'Única vez' if lote.recurrencia.value == 'NINGUNA' else lote.recurrencia.value + ' (día ' + lote.dia_generacion|string + ')' }}</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Configuración</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><td>Selección</td><td>{% if lote.tipo_seleccion.value == 'TODAS' %}Todas las unidades{% elif lote.tipo_seleccion.value == 'GRUPO' %}Grupo: {{ lote.grupo }}{% else %}Manual{% endif %}</td></tr>
+        <tr><td>Tipo de cargo</td><td>{{ lote.tipo_cargo.value }}</td></tr>
+        <tr><td>Monto por unidad</td><td>${{ '%.2f'|format(lote.monto) }} {{ lote.moneda }}</td></tr>
+        <tr><td>Fecha de emisión (última)</td><td>{{ lote.fecha_emision }}</td></tr>
+        <tr><td>Fecha de vencimiento (última)</td><td>{{ lote.fecha_vencimiento }}</td></tr>
+        {% if lote.descuento_activo %}
+        <tr><td>Descuento por pronto pago</td><td>{{ lote.descuento_valor }}{{ '%' if lote.descuento_tipo.value == 'PORCENTAJE' else ' MXN' }} si paga {{ lote.descuento_dias_antes }} días antes del vencimiento</td></tr>
+        {% endif %}
+        {% if lote.recurrencia.value != 'NINGUNA' %}
+        <tr><td>Último periodo generado</td><td>{{ lote.ultimo_periodo_generado }}</td></tr>
+        <tr><td>Estado de la plantilla</td><td>{% if lote.activo %}<span class="badge">Activa</span>{% else %}Pausada{% endif %}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cargos generados ({{ cargos | length }})</h2>
+    {% if cargos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Unidad</th><th>Periodo</th><th>Total</th><th>Saldo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for c in cargos %}
+            <tr>
+              <td>{{ unidades_by_id.get(c.unidad_id, '—') }}</td>
+              <td>{{ c.periodo }}</td>
+              <td>${{ '%.2f'|format(c.monto_total) }}</td>
+              <td style="{{ 'color:var(--danger); font-weight:600;' if c.saldo > 0 else '' }}">${{ '%.2f'|format(c.saldo) }}</td>
+              <td><span class="badge">{{ c.estado.value }}</span></td>
+              <td><a href="/finanzas/cargos/{{ c.id }}" class="btn secondary">Ver</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin cargos generados.</div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% if condominios %}
+<div class="card condo-picker">
+  <form method="get">
+    <div class="field" style="margin-bottom:0;">
+      <label for="condominio-select">Condominio</label>
+      <select id="condominio-select" name="condominio_id" onchange="this.form.submit()">
+        {% for c in condominios %}
+          <option value="{{ c.id }}" {{ 'selected' if c.id == condominio_id else '' }}>{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <noscript><button type="submit" class="btn secondary" style="margin-top:10px;">Cambiar</button></noscript>
+  </form>
+</div>
+{% else %}
+<div class="card empty-state">
+  <p>Primero necesitas crear un condominio.</p>
+  <a href="/condominios" class="btn" style="margin-top:10px;">Crear condominio</a>
+</div>
+{% endif %}

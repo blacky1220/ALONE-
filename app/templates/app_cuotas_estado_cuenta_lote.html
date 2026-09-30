@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Estado de Cuenta en Lote{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Enviar/Imprimir Estado de Cuenta</h1><p>Generación en lote de PDFs para todas las unidades del condominio.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  {% if request.query_params.get('enviado') %}
+    <div class="alert info">
+      Se prepararon los estados de cuenta de {{ request.query_params.get('enviado') }} unidad(es). El envío automático por correo/WhatsApp todavía no está conectado a un proveedor — usa los enlaces de abajo para descargar/imprimir cada uno manualmente mientras tanto.
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <form method="post" action="/app/cuotas/estado-cuenta-lote">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <button type="submit" class="btn">Preparar envío para todas las unidades ({{ unidades | length }})</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Unidades</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Unidad</th><th></th></tr></thead>
+        <tbody>
+          {% for u in unidades %}
+          <tr>
+            <td>{{ u.identificador }}</td>
+            <td class="btn-row">
+              <a href="/finanzas/unidades/{{ u.id }}/imprimir" class="btn secondary" target="_blank">Ver / Imprimir PDF</a>
+              <a href="/finanzas/unidades/{{ u.id }}/excel" class="btn secondary">Excel</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}

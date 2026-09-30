@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Adeudos Recurrentes{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Adeudos Recurrentes</h1><p>Plantillas automáticas de facturación mensual/periódica.</p></div>
+    {% if condominio_id %}<a href="/finanzas/emisiones/nueva?condominio_id={{ condominio_id }}" class="btn">Nueva plantilla recurrente</a>{% endif %}
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    {% if lotes %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Concepto</th><th>Monto</th><th>Recurrencia</th><th>Día generación</th><th>Último periodo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for l in lotes %}
+            <tr>
+              <td><a href="/finanzas/emisiones/{{ l.id }}">{{ l.concepto }}</a></td>
+              <td>${{ '%.2f'|format(l.monto) }}</td>
+              <td><span class="badge">{{ l.recurrencia.value }}</span></td>
+              <td>{{ l.dia_generacion }}</td>
+              <td>{{ l.ultimo_periodo_generado }}</td>
+              <td>{% if l.activo %}<span class="badge">Activa</span>{% else %}<span style="color:var(--text-dim);">Pausada</span>{% endif %}</td>
+              <td>
+                {% if puede_escribir %}
+                {% if l.activo %}
+                <form method="post" action="/app/cuotas/recurrentes/{{ l.id }}/pausar"><input type="hidden" name="condominio_id" value="{{ condominio_id }}"><button type="submit" class="btn secondary">Pausar</button></form>
+                {% else %}
+                <form method="post" action="/app/cuotas/recurrentes/{{ l.id }}/reanudar"><input type="hidden" name="condominio_id" value="{{ condominio_id }}"><button type="submit" class="btn">Reanudar</button></form>
+                {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin plantillas recurrentes configuradas.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

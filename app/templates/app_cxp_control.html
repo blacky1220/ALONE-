@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Control de Cuentas por Pagar{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Control de Cuentas por Pagar</h1><p>Seguimiento de facturas de proveedores, programación y pagos.</p></div>
+    {% if condominio_id %}<a href="/app/cuentas-por-pagar/capturar?condominio_id={{ condominio_id }}" class="btn">+ Nueva cuenta por pagar</a>{% endif %}
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    {% if cuentas %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Proveedor</th><th>Concepto</th><th>Folio</th><th>Vencimiento</th><th>Monto</th><th>Pagado</th><th>Saldo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {% for c in cuentas %}
+            <tr>
+              <td>{{ c.proveedor.nombre }}</td>
+              <td>{{ c.concepto }}</td>
+              <td>{{ c.folio_factura or '—' }}</td>
+              <td>{{ c.fecha_vencimiento }}</td>
+              <td>${{ '%.2f'|format(c.monto) }}</td>
+              <td>${{ '%.2f'|format(c.monto_pagado) }}</td>
+              <td style="font-weight:600;">${{ '%.2f'|format(c.saldo) }}</td>
+              <td><span class="badge {{ 'badge-danger' if c.estado.value == 'VENCIDA' else ('badge-success' if c.estado.value == 'PAGADA' else 'badge-neutral') }}">{{ c.estado.value }}</span></td>
+              <td>
+                {% if c.saldo > 0 and puede_escribir %}
+                <details>
+                  <summary class="btn secondary" style="display:inline-block; cursor:pointer;">Programar pago</summary>
+                  <form method="post" action="/app/cuentas-por-pagar/{{ c.id }}/programar" style="margin-top:8px;">
+                    <div class="field"><label>Monto</label><input type="text" name="monto" value="{{ c.saldo }}" required></div>
+                    <div class="field"><label>Fecha programada</label><input type="date" name="fecha_programada" required></div>
+                    <div class="field">
+                      <label>Cuenta bancaria</label>
+                      <select name="cuenta_bancaria_id">
+                        <option value="">—</option>
+                        {% for cb in cuentas_bancarias %}<option value="{{ cb.id }}">{{ cb.nombre }}</option>{% endfor %}
+                      </select>
+                    </div>
+                    <button type="submit" class="btn">Programar</button>
+                  </form>
+                </details>
+                {% endif %}
+                {% if c.pagos %}
+                <details>
+                  <summary style="cursor:pointer; color:var(--text-dim); font-size:0.85rem;">{{ c.pagos | length }} pago(s)</summary>
+                  <table style="margin-top:6px;">
+                    <thead><tr><th>Monto</th><th>Programado</th><th>Pagado</th><th>Estado</th>{% if puede_escribir %}<th></th>{% endif %}</tr></thead>
+                    <tbody>
+                      {% for p in c.pagos %}
+                      <tr>
+                        <td>${{ '%.2f'|format(p.monto) }}</td>
+                        <td>{{ p.fecha_programada }}</td>
+                        <td>{{ p.fecha_pagada or '—' }}</td>
+                        <td>{{ p.estado.value }}</td>
+                        {% if puede_escribir %}
+                        <td class="btn-row">
+                          {% if p.estado.value == 'PROGRAMADO' %}
+                          <form method="post" action="/app/cuentas-por-pagar/pagos/{{ p.id }}/marcar-pagado"><button type="submit" class="btn secondary">Marcar pagado</button></form>
+                          <form method="post" action="/app/cuentas-por-pagar/pagos/{{ p.id }}/cancelar"><button type="submit" class="btn danger">Cancelar</button></form>
+                          {% endif %}
+                        </td>
+                        {% endif %}
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </details>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin cuentas por pagar registradas.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

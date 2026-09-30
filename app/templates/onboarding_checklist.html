@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Onboarding — Condominios SaaS{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>Onboarding contable</h1>
+      <p>Configura tu condominio paso a paso antes de operar el día a día.</p>
+    </div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio %}
+  <div class="card">
+    {% set links = {
+      'PRESUPUESTO': '/onboarding/presupuesto',
+      'BANCOS': '/onboarding/bancos',
+      'ADEUDOS_INICIALES': '/onboarding/adeudos-iniciales',
+      'SALDOS_FAVOR': '/onboarding/saldos-favor',
+      'CUOTAS': '/onboarding/cuotas',
+      'INGRESOS': '/onboarding/ingresos',
+      'EGRESOS': '/onboarding/egresos',
+      'INVITACIONES': '/onboarding/invitaciones',
+    } %}
+    {% for item in items %}
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 0; {{ 'border-bottom:1px solid var(--border);' if not loop.last else '' }}">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:28px; height:28px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700;
+            {% if item.estado == 'COMPLETADO' %} background:#e9f6ee; color:var(--primary-dark);
+            {% elif item.estado == 'EN_PROGRESO' %} background:#fdf6e3; color:#8a5a1c;
+            {% else %} background:var(--bg); color:var(--text-dim); border:1px solid var(--border);
+            {% endif %}">
+            {{ loop.index }}
+          </div>
+          <div>
+            <div style="font-weight:600;">{{ item.titulo }}</div>
+            <div style="color:var(--text-dim); font-size:0.85rem;">{{ item.descripcion }}</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="badge" style="
+            {% if item.estado == 'COMPLETADO' %} background:#e9f6ee; color:var(--primary-dark);
+            {% elif item.estado == 'EN_PROGRESO' %} background:#fdf6e3; color:#8a5a1c;
+            {% else %} background:var(--bg); color:var(--text-dim);
+            {% endif %}">
+            {{ {'PENDIENTE': 'Pendiente', 'EN_PROGRESO': 'En progreso', 'COMPLETADO': 'Completado'}[item.estado] }}
+          </span>
+          {% if item.estado == 'COMPLETADO' %}
+          <form method="post" action="/onboarding/{{ item.paso }}/marcar">
+            <input type="hidden" name="condominio_id" value="{{ condominio.id }}">
+            <input type="hidden" name="estado" value="EN_PROGRESO">
+            <button type="submit" class="btn secondary" title="Reabrir paso">Reabrir</button>
+          </form>
+          {% else %}
+          <form method="post" action="/onboarding/{{ item.paso }}/marcar">
+            <input type="hidden" name="condominio_id" value="{{ condominio.id }}">
+            <input type="hidden" name="estado" value="COMPLETADO">
+            <button type="submit" class="btn secondary" title="Marcar como completado sin capturar más datos">Marcar listo</button>
+          </form>
+          {% endif %}
+          <a href="{{ links[item.paso] }}?condominio_id={{ condominio.id }}" class="btn secondary">Ir</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Reportes — Condominios SaaS{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>Reportes</h1>
+      <p>Crea y edita plantillas HTML/CSS/JS para estados de cuenta, avisos y reportes del condominio.</p>
+    </div>
+  </div>
+
+  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <h2>Nuevo reporte</h2>
+    <form method="post" action="/reportes" class="btn-row" style="align-items:flex-end;">
+      <div class="field" style="flex:1; margin-bottom:0;">
+        <label>Nombre del reporte</label>
+        <input type="text" name="name" placeholder="ej. estado-de-cuenta" required>
+      </div>
+      <button type="submit" class="btn">Crear</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Tus reportes</h2>
+    {% if projects %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Modificado</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for p in projects %}
+            <tr>
+              <td><a href="/reportes/{{ p.name }}">{{ p.name }}</a></td>
+              <td style="color:var(--text-dim);">{{ p.modified[:19].replace('T', ' ') }}</td>
+              <td>
+                <div class="btn-row">
+                  <a href="/reportes/{{ p.name }}" class="btn secondary">Editar</a>
+                  <a href="/api/v1/reportes/projects/{{ p.name }}/export" class="btn secondary">Exportar</a>
+                  <form method="post" action="/reportes/{{ p.name }}/delete" onsubmit="return confirm('¿Eliminar {{ p.name }}?');">
+                    <button type="submit" class="btn danger">Eliminar</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no tienes reportes. Crea el primero arriba.</div>
+    {% endif %}
+  </div>
+{% endblock %}

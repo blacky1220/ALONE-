@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Capturar Cuentas por Pagar{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Capturar Cuentas por Pagar</h1><p>Registra facturas o pasivos pendientes con proveedores a crédito.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    {% if not proveedores %}
+      <div class="empty-state">No hay proveedores registrados en este condominio. <a href="/onboarding/proveedores">Agrega uno primero</a>.</div>
+    {% else %}
+    <form method="post" action="/app/cuentas-por-pagar/capturar" enctype="multipart/form-data">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Proveedor</label>
+          <select name="proveedor_id" required>
+            {% for p in proveedores %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Partida presupuestal</label>
+          <select name="partida_id">
+            <option value="">— Sin clasificar —</option>
+            {% for pa in partidas %}<option value="{{ pa.id }}">{{ pa.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Concepto</label><input type="text" name="concepto" required></div>
+      <div class="grid cols-2">
+        <div class="field"><label>Folio de factura</label><input type="text" name="folio_factura"></div>
+        <div class="field"><label>Monto</label><input type="text" name="monto" placeholder="0.00" required></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="field"><label>Fecha de factura</label><input type="date" name="fecha_factura" required></div>
+        <div class="field"><label>Fecha de vencimiento</label><input type="date" name="fecha_vencimiento" required></div>
+      </div>
+      <div class="field"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>
+      <div class="field"><label>Comprobante / factura (PDF o imagen)</label><input type="file" name="comprobante"></div>
+      <button type="submit" class="btn">Registrar cuenta por pagar</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "auth_base.html" %}
+{% block title %}Activa tu acceso — Condominios SaaS{% endblock %}
+{% block content %}
+  {% if invalido %}
+    <h1>Enlace no válido</h1>
+    <p class="sub">{{ error }}</p>
+    <a href="/login" class="btn">Ir a iniciar sesión</a>
+  {% else %}
+    <h1>Bienvenido, {{ propietario.full_name }}</h1>
+    <p class="sub">Activa tu acceso al portal de tu condominio</p>
+    <form method="post" action="/activar/{{ token }}">
+      <div class="field">
+        <label for="full_name">Tu nombre</label>
+        <input type="text" id="full_name" name="full_name"
+               value="{{ propietario.full_name }}" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="password">Crea una contraseña</label>
+        <input type="password" id="password" name="password"
+               autocomplete="new-password" required minlength="6">
+      </div>
+      <button type="submit" class="btn">Activar mi cuenta</button>
+    </form>
+  {% endif %}
+{% endblock %}

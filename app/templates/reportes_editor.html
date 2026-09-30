@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ project }} — Reportes{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <h1>{{ project }}</h1>
+      <p><a href="/reportes">&larr; Volver a Reportes</a></p>
+    </div>
+    <div class="btn-row">
+      <a href="/api/v1/reportes/projects/{{ project }}/export" class="btn secondary">Exportar .zip</a>
+    </div>
+  </div>
+
+  <div class="editor-layout">
+    <div class="file-tree">
+      {% for f in files %}
+        <a href="/reportes/{{ project }}?file={{ f.path }}" class="{{ 'active' if f.path == current_file else '' }}">{{ f.path }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="editor-panes">
+      <div class="editor-toolbar">
+        <strong>{{ current_file }}</strong>
+        <span class="status" id="status"></span>
+      </div>
+      <div class="split">
+        <div>
+          <h4>Código</h4>
+          <textarea id="code-editor">{{ content }}</textarea>
+        </div>
+        <div>
+          <h4>Vista previa</h4>
+          <iframe class="preview-frame" id="preview"></iframe>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="save-btn">Guardar</button>
+        <button class="btn secondary" id="preview-btn">Actualizar vista previa</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const project = {{ project | tojson }};
+    const filePath = {{ current_file | tojson }};
+    const editor = document.getElementById('code-editor');
+    const status = document.getElementById('status');
+    const preview = document.getElementById('preview');
+
+    function renderPreview() {
+      if (filePath.endsWith('.html')) {
+        preview.srcdoc = editor.value;
+      } else {
+        preview.srcdoc = '<pre style="padding:12px;font-family:monospace;">' +
+          editor.value.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>';
+      }
+    }
+    renderPreview();
+    document.getElementById('preview-btn').addEventListener('click', renderPreview);
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      status.textContent = 'Guardando...';
+      try {
+        const res = await fetch(`/api/v1/reportes/projects/${encodeURIComponent(project)}/files/${filePath}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ content: editor.value }),
+        });
+        if (!res.ok) throw new Error('Error al guardar');
+        status.textContent = 'Guardado ✓';
+        renderPreview();
+      } catch (e) {
+        status.textContent = 'Error al guardar';
+      }
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Invitaciones — Onboarding{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>8. Invita a residentes a usar el sistema</h1><p><a href="/onboarding?condominio_id={{ condominio_id }}">&larr; Onboarding</a></p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="alert info">
+    El envío automático por correo o WhatsApp todavía no está conectado (requiere un proveedor de correo/WhatsApp Business).
+    Por ahora, genera el enlace mágico y compártelo manualmente con el botón de WhatsApp o copiándolo.
+  </div>
+
+  <div class="card">
+    <h2>Generar invitación</h2>
+    {% if propietarios %}
+    <form method="post" action="/onboarding/invitaciones" class="btn-row" style="align-items:flex-end;">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field" style="margin-bottom:0; flex:1;">
+        <label>Propietario</label>
+        <select name="propietario_id" required>
+          {% for p in propietarios %}<option value="{{ p.id }}">{{ p.full_name }}{{ ' (' + p.email + ')' if p.email else '' }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0; flex:1;">
+        <label>Correo (si es distinto al registrado)</label>
+        <input type="email" name="email" placeholder="opcional">
+      </div>
+      <button type="submit" class="btn">Generar enlace mágico</button>
+    </form>
+    {% else %}
+      <div class="empty-state">Primero registra propietarios y asígnalos a una unidad en <a href="/condominios/{{ condominio_id }}">Condominios</a>.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Invitaciones generadas</h2>
+    {% if invitaciones %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Propietario</th><th>Correo</th><th>Estado</th><th>Enlace</th></tr></thead>
+          <tbody>
+            {% for inv in invitaciones %}
+            {% set link = base_url + '/activar/' + inv.token %}
+            <tr>
+              <td>{{ propietarios_by_id.get(inv.propietario_id, '—') }}</td>
+              <td style="color:var(--text-dim);">{{ inv.email }}</td>
+              <td>{% if inv.usado %}<span class="badge">Activada</span>{% else %}Pendiente{% endif %}</td>
+              <td>
+                {% if not inv.usado %}
+                <div class="btn-row">
+                  <input type="text" readonly value="{{ link }}" style="width:220px; font-size:0.78rem;" onclick="this.select()">
+                  <a class="btn secondary" href="https://wa.me/?text={{ ('Activa tu acceso al portal del condominio: ' + link) | urlencode }}" target="_blank">WhatsApp</a>
+                  <a class="btn secondary" href="mailto:{{ inv.email }}?subject=Activa%20tu%20acceso&body={{ ('Activa tu acceso al portal del condominio: ' + link) | urlencode }}">Correo</a>
+                </div>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Sin invitaciones generadas todavía.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

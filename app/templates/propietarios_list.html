@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Propietarios{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Propietarios</h1><p>Directorio de propietarios y residentes. Luego los asignas a una unidad desde Condominios.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Nuevo propietario</h2>
+    <form method="post" action="/propietarios" class="grid cols-3" style="align-items:flex-end;">
+      <div class="field" style="margin-bottom:0;"><label>Nombre completo</label><input type="text" name="full_name" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Correo</label><input type="email" name="email"></div>
+      <div class="field" style="margin-bottom:0;"><label>Teléfono</label><input type="text" name="phone"></div>
+      <button type="submit" class="btn">Agregar</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Directorio</h2>
+    {% if propietarios %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Unidades</th><th>Cuenta vinculada</th></tr></thead>
+          <tbody>
+            {% for p in propietarios %}
+            <tr>
+              <td>{{ p.full_name }}</td>
+              <td style="color:var(--text-dim);">{{ p.email or '—' }}</td>
+              <td style="color:var(--text-dim);">{{ p.phone or '—' }}</td>
+              <td>{{ p.unidades | length }}</td>
+              <td>
+                {% if p.user_id %}
+                  <span class="badge">Vinculada</span>
+                {% else %}
+                  <form method="post" action="/propietarios/{{ p.id }}/vincular" class="btn-row">
+                    <select name="usuario_id" required>
+                      <option value="">Vincular a usuario…</option>
+                      {% for u in usuarios %}<option value="{{ u.id }}">{{ u.email }}</option>{% endfor %}
+                    </select>
+                    <button type="submit" class="btn secondary">Vincular</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no hay propietarios registrados.</div>
+    {% endif %}
+  </div>
+{% endblock %}

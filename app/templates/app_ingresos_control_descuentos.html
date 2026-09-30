@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Control de Descuentos{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Control de Descuentos</h1><p>Historial de bonificaciones concedidas y su motivo.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Descuentos aplicados ({{ descuentos | length }}) — Total: ${{ '%.2f'|format(total) }}</h2>
+    {% if descuentos %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cargo</th><th>Tipo</th><th>Valor</th><th>Monto descontado</th><th>Motivo</th></tr></thead>
+          <tbody>
+            {% for d in descuentos %}
+            <tr>
+              <td>{{ d.created_at.strftime('%Y-%m-%d') }}</td>
+              <td><a href="/finanzas/cargos/{{ d.cargo_id }}">CGO-{{ d.cargo_id }}</a></td>
+              <td>{{ d.tipo.value }}</td>
+              <td>{{ d.valor }}{{ '%' if d.tipo.value == 'PORCENTAJE' else '' }}</td>
+              <td>${{ '%.2f'|format(d.monto_descontado) }}</td>
+              <td style="color:var(--text-dim);">{{ d.motivo }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}<div class="empty-state">Sin descuentos manuales aplicados todavía.</div>{% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

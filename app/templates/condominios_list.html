@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Condominios{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Condominios</h1><p>Da de alta los condominios que administras.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Nuevo condominio</h2>
+    <form method="post" action="/condominios" class="grid cols-3" style="align-items:flex-end;">
+      <div class="field" style="margin-bottom:0;"><label>Nombre</label><input type="text" name="nombre" required></div>
+      <div class="field" style="margin-bottom:0;"><label>Dirección</label><input type="text" name="direccion"></div>
+      <div class="field" style="margin-bottom:0;"><label>Ciudad</label><input type="text" name="ciudad"></div>
+      <button type="submit" class="btn">Crear</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Tus condominios</h2>
+    {% if condominios %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Ciudad</th><th>Unidades</th><th></th></tr></thead>
+          <tbody>
+            {% for c in condominios %}
+            <tr>
+              <td>{{ c.nombre }}</td>
+              <td style="color:var(--text-dim);">{{ c.ciudad or '—' }}</td>
+              <td>{{ c.unidades | length }}</td>
+              <td><a href="/condominios/{{ c.id }}" class="btn secondary">Administrar</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">Aún no tienes condominios registrados.</div>
+    {% endif %}
+  </div>
+{% endblock %}

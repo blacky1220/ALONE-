@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Aplicar Descuento{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div><h1>Aplicar Descuento</h1><p>Bonificación manual sobre un cargo pendiente.</p></div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  <div class="card">
+    <h2>Nuevo descuento</h2>
+    {% if cargos_pendientes %}
+    <form method="post" action="/app/ingresos/aplicar-descuento" class="grid cols-2">
+      <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+      <div class="field">
+        <label>Cargo</label>
+        <select name="cargo_id" required>
+          {% for c in cargos_pendientes %}
+          <option value="{{ c.id }}">{{ unidades_by_id.get(c.unidad_id) }} — {{ c.concepto }} (saldo ${{ '%.2f'|format(c.saldo) }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select name="tipo"><option value="PORCENTAJE">Porcentaje (%)</option><option value="FIJO">Monto fijo ($)</option></select>
+      </div>
+      <div class="field"><label>Valor</label><input type="text" name="valor" placeholder="10" required></div>
+      <div class="field"><label>Motivo</label><input type="text" name="motivo" placeholder="Descuento por pago puntual histórico" required></div>
+      <button type="submit" class="btn">Aplicar descuento</button>
+    </form>
+    {% else %}
+      <div class="empty-state">No hay cargos pendientes sobre los cuales aplicar un descuento.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Escanear Estado de Cuenta{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <span class="badge badge-success" style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">IA & Conciliación</span>
+        <span style="font-size:0.8rem; color:var(--text-faint);">Lectura Multiformato</span>
+      </div>
+      <h1 style="font-size:1.9rem; font-weight:700; letter-spacing:-0.5px;">Escanear Estado de Cuenta</h1>
+      <p style="color:var(--text-muted); font-size:0.95rem; max-width:720px;">
+        Sube el estado de cuenta bancario en <strong>PDF</strong>, <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong>.
+        El sistema detectará automáticamente los abonos, asociará el departamento por referencia o por propietario, y te permitirá editar la vista previa antes de registrar los pagos.
+      </p>
+    </div>
+  </div>
+
+  {% include "_condominio_selector.html" %}
+
+  {% if condominio_id %}
+  {% if request.query_params.get('error') == 'formato' %}
+    <div class="alert error">Formato no soportado. Sube un archivo bancario en formato <strong>PDF</strong>, <strong>Excel (.xlsx, .xls)</strong> o <strong>CSV</strong>.</div>
+  {% elif request.query_params.get('error') == 'lectura' %}
+    <div class="alert error">No se pudo procesar el archivo. Verifica que no esté corrupto ni protegido con contraseña.</div>
+  {% elif request.query_params.get('error') == 'no_encontrado' %}
+    <div class="alert error">El archivo seleccionado ya no se encuentra en el servidor.</div>
+  {% endif %}
+
+  <div class="grid cols-2" style="margin-bottom:24px; align-items:start;">
+    {% if puede_escribir %}
+    <!-- Subir Archivo Nuevo -->
+    <div class="card" style="box-shadow:0 4px 20px rgba(0,0,0,0.03); border:1px solid var(--border);">
+      <h2 style="font-size:1.15rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+        <span>Subir nuevo archivo</span>
+      </h2>
+      <form method="post" action="/app/estados-cuenta" enctype="multipart/form-data">
+        <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+        
+        <div class="field" style="margin-bottom:16px;">
+          <label for="archivo" style="font-weight:600; display:block; margin-bottom:6px;">
+            Archivo bancario (PDF, Excel o CSV)
+          </label>
+          <div style="border:2px dashed var(--border); border-radius:12px; padding:20px; text-align:center; background:var(--surface-2); transition:border-color 0.2s;">
+            <svg style="width:36px; height:36px; stroke:var(--brand-orange, #ef4d23); fill:none; margin-bottom:8px;" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <input type="file" id="archivo" name="archivo" accept=".pdf,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required style="display:block; margin:0 auto; font-size:0.85rem;">
+            <p style="font-size:0.75rem; color:var(--text-faint); margin-top:6px;">Formatos aceptados: PDF con texto seleccionable, Excel (.xlsx, .xls) o CSV bancario.</p>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:18px;">
+          <label for="cuenta" style="font-weight:600; display:block; margin-bottom:6px;">Cuenta bancaria destino <span style="font-weight:400; color:var(--text-faint);">(opcional)</span></label>
+          <select id="cuenta" name="cuenta_bancaria_id" style="width:100%;">
+            <option value="">— Sin especificar cuenta —</option>
+            {% for cb in cuentas %}<option value="{{ cb.id }}">{{ cb.banco }}{% if cb.clabe %} · CLABE {{ cb.clabe }}{% endif %}</option>{% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; justify-content:center; padding:12px; font-weight:600;">
+          <span>Procesar y Abrir Vista Previa &rarr;</span>
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Archivos ya presentes en el sistema -->
+    <div class="card" style="box-shadow:0 4px 20px rgba(0,0,0,0.03); border:1px solid var(--border);">
+      <h2 style="font-size:1.15rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+        <span>Archivos disponibles en el servidor</span>
+      </h2>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">
+        Archivos de estados de cuenta o exportaciones listos para procesar con un solo clic:
+      </p>
+
+      {% if archivos_existentes %}
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          {% for arc in archivos_existentes %}
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--surface-2); border-radius:10px; border:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <span class="badge {% if arc.extension == 'XLSX' or arc.extension == 'XLS' %}badge-success{% elif arc.extension == 'PDF' %}badge-danger{% else %}badge-neutral{% endif %}" style="font-weight:700;">
+                {{ arc.extension }}
+              </span>
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <div style="font-weight:600; font-size:0.88rem; color:var(--text-main);">{{ arc.nombre }}</div>
+                <div style="font-size:0.75rem; color:var(--text-faint);">{{ arc.tamano }}</div>
+              </div>
+            </div>
+
+            {% if puede_escribir %}
+            <form method="post" action="/app/estados-cuenta/cargar-existente" style="margin:0; flex-shrink:0;">
+              <input type="hidden" name="condominio_id" value="{{ condominio_id }}">
+              <input type="hidden" name="nombre_archivo" value="{{ arc.nombre }}">
+              <button type="submit" class="btn secondary" style="font-size:0.8rem; padding:6px 12px;">
+                Cargar &rarr;
+              </button>
+            </form>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding:20px; font-size:0.85rem;">
+          No hay archivos de prueba precargados en la carpeta de exportaciones.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Historial de Estados de Cuenta -->
+  <div class="card" style="box-shadow:0 4px 20px rgba(0,0,0,0.03); border:1px solid var(--border);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div>
+        <h2 style="font-size:1.15rem; margin:0;">Estados de cuenta procesados</h2>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin:2px 0 0 0;">Historial de importaciones para este condominio</p>
+      </div>
+    </div>
+
+    {% if importaciones %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Archivo</th>
+              <th>Fecha de lectura</th>
+              <th style="text-align:center;">Movimientos</th>
+              <th style="text-align:right;">Total Abonos</th>
+              <th>Estado</th>
+              <th style="text-align:right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for imp in importaciones %}
+            <tr>
+              <td>
+                <div style="font-weight:600; color:var(--text-main);">{{ imp.nombre_archivo }}</div>
+                {% if imp.cuenta_bancaria %}
+                  <div style="font-size:0.75rem; color:var(--text-faint);">{{ imp.cuenta_bancaria.banco }}</div>
+                {% endif %}
+              </td>
+              <td style="font-size:0.85rem; color:var(--text-muted);">
+                {{ imp.created_at.strftime('%d/%m/%Y %H:%M') if imp.created_at else '—' }}
+              </td>
+              <td style="text-align:center; font-weight:600;">{{ imp.total_movimientos }}</td>
+              <td class="num" style="text-align:right; font-weight:700; color:var(--text-main);">
+                ${{ '%.2f'|format(imp.total_abonos) }}
+              </td>
+              <td>
+                {% if imp.estado.value == 'APLICADA' %}
+                  <span class="badge badge-success" style="font-size:0.75rem;">✓ Aplicada · {{ imp.total_aplicados }} pago(s)</span>
+                {% else %}
+                  <span class="badge badge-warning" style="font-size:0.75rem;">Borrador en revisión</span>
+                {% endif %}
+              </td>
+              <td style="text-align:right;">
+                <div class="btn-row" style="justify-content:flex-end;">
+                  <a href="/app/estados-cuenta/{{ imp.id }}" class="btn secondary" style="font-size:0.8rem; padding:6px 12px;">
+                    {{ 'Ver detalle' if imp.estado.value == 'APLICADA' else 'Revisar y Editar' }}
+                  </a>
+                  {% if puede_escribir and imp.estado.value != 'APLICADA' %}
+                  <form method="post" action="/app/estados-cuenta/{{ imp.id }}/eliminar" onsubmit="return confirm('¿Eliminar este borrador? No se puede deshacer.');" style="margin:0;">
+                    <button type="submit" class="btn danger" style="font-size:0.8rem; padding:6px 10px;">Eliminar</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding:30px;">
+        <p style="margin-bottom:8px; font-weight:600;">Aún no has procesado ningún estado de cuenta.</p>
+        <p style="font-size:0.85rem; color:var(--text-faint);">Sube un archivo bancario en PDF o Excel para comenzar.</p>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endblock %}
