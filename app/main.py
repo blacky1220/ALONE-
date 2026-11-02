@@ -55,7 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Los navegadores piden /favicon.ico aunque el HTML declare <link rel="icon">.
 # Servirlo aquí evita un 404 por cada carga de página en los logs.
