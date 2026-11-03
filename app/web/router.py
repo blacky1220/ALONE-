@@ -40,11 +40,19 @@ from app.modules.reservaciones import services as reservaciones_services
 from app.modules.reservaciones.models import Amenidad, EstadoReservacion, Reservacion
 from app.modules.seguridad import services as seguridad_services
 from app.modules.seguridad.models import AccesoQR, Paquete, Visita
+import os
 
 router = APIRouter(tags=["Frontend"])
 templates = Jinja2Templates(directory="app/templates")
 
-PAGO_COMPROBANTES_DIR = Path(__file__).resolve().parent.parent / "modules" / "finanzas" / "data" / "comprobantes_pago"
+
+
+# Si estamos en Vercel, redirigimos a la carpeta temporal /tmp; si no, a tu ruta local normal
+if os.environ.get("VERCEL"):
+    PAGO_COMPROBANTES_DIR = Path("/tmp/comprobantes_pago")
+else:
+    PAGO_COMPROBANTES_DIR = Path(__file__).resolve().parent.parent / "modules" / "finanzas" / "data" / "comprobantes_pago"
+
 PAGO_COMPROBANTES_DIR.mkdir(parents=True, exist_ok=True)
 templates.env.globals["is_admin"] = is_admin
 templates.env.globals["is_guardia"] = is_guardia
