@@ -7,10 +7,16 @@ para el condominio (estados de cuenta, avisos, etc.).
 
 import json
 import shutil
+import os
 from datetime import datetime
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent / "data"
+# En Vercel el sistema de archivos es de sólo lectura, por lo que debemos usar /tmp
+if os.environ.get("VERCEL"):
+    BASE_DIR = Path("/tmp/data")
+else:
+    BASE_DIR = Path(__file__).resolve().parent / "data"
+
 PROJECTS_DIR = BASE_DIR / "projects"
 EXPORTS_DIR = BASE_DIR / "exports"
 
